@@ -317,10 +317,10 @@ const TIER_ZH={master:'熟用',familiar:'熟悉',recognize:'認識'};
 const REVIEW_CAP=30, NEW_CAP=5, XP_HIT=10, XP_RETRY=5;
 /* 鷹芒勳章：連續 MEDAL_EVERY 天得 1 枚（上限 MEDAL_MAX），落練 1 天自動消耗 1 枚保住連續紀錄 */
 const MEDAL='🎖️', MEDAL_NAME='鷹芒勳章', MEDAL_EVERY=5, MEDAL_MAX=5;
-/* 訓鷹師等級：門檻依每日約 300–400 XP 設計，前快後慢，最高階約在暑假尾聲達成 */
-const RANKS=[[0,'見習訓鷹師'],[300,'初階訓鷹師'],[800,'鷹巢守護者'],[1600,'鷹語者'],
-  [2800,'馭風訓鷹師'],[4500,'御鷹騎士'],[6500,'天空獵手'],[9000,'鷹眼大師'],
-  [12000,'風暴之翼'],[16000,'傳說鷹王']];
+/* 馴鷹師等級：門檻依每日約 300–400 XP 設計，前快後慢，最高階約在暑假尾聲達成 */
+const RANKS=[[0,'鷹兒保育員'],[300,'見習馴鷹師'],[800,'鷹巢守護者'],[1600,'馭風馴鷹師'],
+  [2800,'鷹語天才'],[4500,'御鷹騎士'],[6500,'巡弋獵鷹'],[9000,'鷹眼無雙'],
+  [12000,'破空之翼'],[16000,'蒼穹鷹王']];
 function rankIdx(xp){let i=0;while(i+1<RANKS.length&&xp>=RANKS[i+1][0])i++;return i;}
 const CHEERS=['今天也來練 10 分鐘吧！','你的小鳥們在等你！','昨天的字，今天會更熟！','每天一點點，就會變超強！','準備好了嗎？出發！',
   '每練一次，翅膀就硬一點！','高手都是每天練出來的！','今天也要飛得更高喔！','記憶力就像肌肉，越用越強壯！','慢慢來，你已經比昨天更厲害了！',
@@ -481,7 +481,7 @@ function renderHome(){
       <div class="rank">👑 LV.${rankIdx(db.stats.xp)+1}｜${RANKS[rankIdx(db.stats.xp)][1]}</div>
       <div class="ranknext">${rankIdx(db.stats.xp)+1<RANKS.length
         ?'再 '+(RANKS[rankIdx(db.stats.xp)+1][0]-db.stats.xp)+' ⭐ 升級為「'+RANKS[rankIdx(db.stats.xp)+1][1]+'」'
-        :'已達最高階，你就是傳說！'}</div>
+        :'最高階達成！整片天空都是你的！'}</div>
     </div>
     <div class="statRow">
       <div class="stat"><div class="n grad">🦅 ${grad}</div><div class="l">起飛囉！</div></div>
@@ -801,7 +801,7 @@ function renderParent(){
   el('view').innerHTML=`
     <div class="card">
       <h2>📊 學習狀況</h2>
-      <div class="prow"><span>訓鷹師稱號</span><b>👑 LV.${rankIdx(db.stats.xp)+1} ${RANKS[rankIdx(db.stats.xp)][1]}（${db.stats.xp} ⭐）</b></div>
+      <div class="prow"><span>馴鷹師稱號</span><b>👑 LV.${rankIdx(db.stats.xp)+1} ${RANKS[rankIdx(db.stats.xp)][1]}（${db.stats.xp} ⭐）</b></div>
       <div class="prow"><span>連續天數</span><b>🔥 ${effStreak()} 天（最高 ${db.stats.best} 天）</b></div>
       <div class="prow"><span>${MEDAL} ${MEDAL_NAME}</span><b>${db.stats.shields} 枚</b></div>
       <div class="prow"><span>起飛（金鷹）</span><b>${grad} / ${words.length} 字</b></div>
