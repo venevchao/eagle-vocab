@@ -68,6 +68,8 @@
   @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
   .bubble{background:var(--card);border:2px solid var(--line);border-radius:16px;
           padding:10px 16px;display:inline-block;font-weight:700;margin-bottom:8px;font-size:16px;}
+  .rank{font-weight:800;font-size:17px;margin-top:8px;}
+  .ranknext{color:var(--ink2);font-size:13px;font-weight:700;margin-top:2px;}
   .statRow{display:flex;gap:10px;margin:14px 0;}
   .stat{flex:1;background:var(--card);border:2px solid var(--line);border-radius:var(--r);
         padding:12px 8px;text-align:center;}
@@ -315,6 +317,11 @@ const TIER_ZH={master:'熟用',familiar:'熟悉',recognize:'認識'};
 const REVIEW_CAP=30, NEW_CAP=5, XP_HIT=10, XP_RETRY=5;
 /* 鷹芒勳章：連續 MEDAL_EVERY 天得 1 枚（上限 MEDAL_MAX），落練 1 天自動消耗 1 枚保住連續紀錄 */
 const MEDAL='🎖️', MEDAL_NAME='鷹芒勳章', MEDAL_EVERY=5, MEDAL_MAX=5;
+/* 訓鷹師等級：門檻依每日約 300–400 XP 設計，前快後慢，最高階約在暑假尾聲達成 */
+const RANKS=[[0,'見習訓鷹師'],[300,'初階訓鷹師'],[800,'鷹巢守護者'],[1600,'鷹語者'],
+  [2800,'馭風訓鷹師'],[4500,'御鷹騎士'],[6500,'天空獵手'],[9000,'鷹眼大師'],
+  [12000,'風暴之翼'],[16000,'傳說鷹王']];
+function rankIdx(xp){let i=0;while(i+1<RANKS.length&&xp>=RANKS[i+1][0])i++;return i;}
 const CHEERS=['今天也來練 10 分鐘吧！','你的小鳥們在等你！','昨天的字，今天會更熟！','每天一點點，就會變超強！','準備好了嗎？出發！',
   '每練一次，翅膀就硬一點！','高手都是每天練出來的！','今天也要飛得更高喔！','記憶力就像肌肉，越用越強壯！','慢慢來，你已經比昨天更厲害了！',
   '練習不會騙人，你會看到自己進步！','小小的努力，會變成大大的實力！','今天的你，正在變成更棒的自己！'];
@@ -471,6 +478,10 @@ function renderHome(){
     <div class="mascot">
       <div class="bubble">${esc(cheer)}</div><br>
       <span class="bird">${doneToday?'🦅':'🐦'}</span>
+      <div class="rank">👑 LV.${rankIdx(db.stats.xp)+1}｜${RANKS[rankIdx(db.stats.xp)][1]}</div>
+      <div class="ranknext">${rankIdx(db.stats.xp)+1<RANKS.length
+        ?'再 '+(RANKS[rankIdx(db.stats.xp)+1][0]-db.stats.xp)+' ⭐ 升級為「'+RANKS[rankIdx(db.stats.xp)+1][1]+'」'
+        :'已達最高階，你就是傳說！'}</div>
     </div>
     <div class="statRow">
       <div class="stat"><div class="n grad">🦅 ${grad}</div><div class="l">起飛囉！</div></div>
@@ -491,7 +502,7 @@ function startSession(){
   if(window.speechSynthesis){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}
   const q=buildQueue();
   if(!q.length){el('view').innerHTML='<div class="card"><h2>沒有可以練的字！</h2><p class="muted">請家長先在「家長」頁新增單字。</p></div>';return;}
-  S={q,i:0,total:q.length,firstOk:0,firstNg:0,xp:0,evolved:[],newBadges:[]};
+  S={q,i:0,total:q.length,firstOk:0,firstNg:0,xp:0,evolved:[],newBadges:[],rank0:rankIdx(db.stats.xp)};
   renderCard();
 }
 function renderCard(){
@@ -702,6 +713,7 @@ function finishSession(){
       <p class="muted">答對 ${S.firstOk} 題 ・ 再挑戰 ${S.firstNg} 題 ・ 獲得 ${S.xp} ⭐</p>
       ${S.evolved.length?`<h2 class="mtl">🎊 進化了！</h2>
         <div class="evolist">${S.evolved.map(e=>`<span class="evo">${e.em} <span class="en">${esc(e.w)}</span></span>`).join('')}</div>`:''}
+      ${rankIdx(db.stats.xp)>S.rank0?`<div class="badgePop">👑 升級！你現在是「${RANKS[rankIdx(db.stats.xp)][1]}」！</div>`:''}
       ${medalUsed?`<div class="badgePop">${MEDAL} ${MEDAL_NAME}替你飛過了休息的那 ${medalUsed} 天，連續紀錄守住了！</div>`:''}
       ${medalEarned?`<div class="badgePop">${MEDAL} 連續 ${db.stats.streak} 天！獲得一枚${MEDAL_NAME}（目前 ${db.stats.shields} 枚）</div>`:''}
       ${S.newBadges.map(b=>`<div class="badgePop">🏅 得到徽章：${esc(b)}</div>`).join('')}
@@ -789,6 +801,7 @@ function renderParent(){
   el('view').innerHTML=`
     <div class="card">
       <h2>📊 學習狀況</h2>
+      <div class="prow"><span>訓鷹師稱號</span><b>👑 LV.${rankIdx(db.stats.xp)+1} ${RANKS[rankIdx(db.stats.xp)][1]}（${db.stats.xp} ⭐）</b></div>
       <div class="prow"><span>連續天數</span><b>🔥 ${effStreak()} 天（最高 ${db.stats.best} 天）</b></div>
       <div class="prow"><span>${MEDAL} ${MEDAL_NAME}</span><b>${db.stats.shields} 枚</b></div>
       <div class="prow"><span>起飛（金鷹）</span><b>${grad} / ${words.length} 字</b></div>
