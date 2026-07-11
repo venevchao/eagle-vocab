@@ -346,7 +346,7 @@ const TEST=new URLSearchParams(location.search).has('test');
 const KEY=TEST?'word-birds-test-v1':'word-birds-v1', BAK=KEY+'-bak';
 const INTERVALS=[0,1,2,4,8,16];               /* 各等級到下次複習的天數 */
 const MAXLV={master:5,familiar:5,recognize:4};
-const STAGE=['🥚','🐣','🐤','🐦','🐦‍⬛','🦅'];
+const STAGE=['🥚','🐣','🐤','🐦','🦜','🦅'];
 const STAGE_NAME=['蛋','孵化','雛鳥','小鳥','成鳥','雄鷹'];
 const TIER_ZH={master:'熟用',familiar:'熟悉',recognize:'認識'};
 const REVIEW_CAP=30, NEW_CAP=5, XP_HIT=10, XP_RETRY=5;
@@ -847,7 +847,7 @@ function renderManual(){
     ['🐣','孵化','答對 1 次','休息 1 天再考'],
     ['🐤','雛鳥','再答對 1 次','休息 2 天再考'],
     ['🐦','小鳥','再答對 1 次','休息 4 天再考'],
-    ['🐦‍⬛','成鳥','再答對 1 次','休息 8 天再考'],
+    ['🦜','成鳥','再答對 1 次','休息 8 天再考'],
     ['🦅','雄鷹','再答對 1 次，畢業！','偶爾回來考考你']];
   el('view').innerHTML=`
     <h2>📜 馴鷹祕笈</h2>
@@ -855,7 +855,7 @@ function renderManual(){
     <div class="card">
       <h2>🐣 鳥兒的進化之路</h2>
       ${stages.map(s=>`<div class="prow"><span style="font-size:17px">${s[0]} <b>${s[1]}</b></span><span style="text-align:right;color:var(--ink2);font-size:13px;font-weight:700">${s[2]}<br>${s[3]}</span></div>`).join('')}
-      <p class="muted" style="margin-top:8px">升級只算「休息完再考」的那一次答對——記憶要過夜才算數！有些任務比較簡單的字，到 🐦‍⬛ 成鳥就直接變雄鷹。</p>
+      <p class="muted" style="margin-top:8px">升級只算「休息完再考」的那一次答對——記憶要過夜才算數！有些任務比較簡單的字，到 🦜 成鳥就直接變雄鷹。</p>
     </div>
     <div class="card mt">
       <h2>😅 答錯了會怎樣？</h2>
