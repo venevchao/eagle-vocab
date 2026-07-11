@@ -1,5 +1,15 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#DDF0FE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1826" media="(prefers-color-scheme: dark)">
 <title>養鷹達人</title>
 <style>
+  *,*::before,*::after{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  h2,p{margin:0;}
   :root{
     --sky:#EAF5FD;        /* 天空底 */
     --card:#FFFFFF;
@@ -180,8 +190,28 @@
   #cfx{position:fixed;inset:0;pointer-events:none;z-index:50;}
   .hid{display:none !important;}
   .mt{margin-top:14px;} .mtl{margin-top:22px;}
-</style>
 
+  /* ===== 夜間鳥園（跟隨系統外觀） ===== */
+  @media (prefers-color-scheme: dark){
+    :root{
+      --sky:#0F1E2E; --card:#1A2B3E; --ink:#E9F1FA; --ink2:#9DB3CA;
+      --sun:#FFAB2E; --sun-d:#B87E12; --grass:#45C87E; --grass-d:#2E9C5E;
+      --coral:#FF8A80; --coral-d:#D9645A; --line:#2C4155; --chip:#233850;
+      --gold:#FFC53D; --teal:#6BCBE0;
+    }
+    body{background:linear-gradient(180deg,#0B1826 0%,#102132 45%,#12271F 100%);background-attachment:fixed;}
+    nav{background:rgba(13,23,36,.96);}
+    .pbar{background:var(--card);}
+    .slot{background:rgba(255,255,255,.07);}
+    .snode.on{background:#33290F;}
+    .opt.ok{background:#173325;}
+    .opt.ng{background:#3A2126;}
+    .badgePop,.aviCell.grad{background:#2E2609;}
+    textarea,select,input[type=text]{background:var(--card);}
+  }
+</style>
+</head>
+<body>
 <div id="app">
   <header>
     <span class="logo">🦅 養鷹達人</span>
@@ -892,3 +922,5 @@ function resetAll(){
 document.addEventListener('touchstart',function once(){ac();document.removeEventListener('touchstart',once);},{passive:true});
 go('home');
 </script>
+</body>
+</html>
