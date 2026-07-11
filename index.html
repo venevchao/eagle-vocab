@@ -734,14 +734,14 @@ function sayCard(x){
   micClear('w'); micClear('c');
   const micOn=micSupported();
   if(micOn){
-    micSetup('w','micWordBox','🎙️ 錄音唸這個字',null,null);
-    micSetup('c','micChalBox','🎙️ 挑戰：用這個字說一句話','+5⭐',()=>micChallengeReward(x));
+    micSetup('w','micWordBox','🎙️ 我要錄音！',null,null);
+    micSetup('c','micChalBox','🎙️ 挑戰造句','+5⭐',()=>micChallengeReward(x));
   }
   return `<div class="prompt">🗣️ 大聲唸出這個字！</div>
     <div class="bigword en">${esc(x.w)}</div>
     <div class="gloss">${esc(x.zh||'')}</div>
-    ${micOn?`<div class="micRow" id="micWordBox">${micWidgetHTML('w','🎙️ 錄音唸這個字',null)}</div>
-    <div class="micRow" id="micChalBox">${micWidgetHTML('c','🎙️ 挑戰：用這個字說一句話','+5⭐')}</div>`:''}
+    ${micOn?`<div class="micRow" id="micWordBox">${micWidgetHTML('w','🎙️ 我要錄音！',null)}</div>
+    <div class="micRow" id="micChalBox">${micWidgetHTML('c','🎙️ 挑戰造句','+5⭐')}</div>`:''}
     <div class="fb" style="padding-top:6px">
       <button class="btn big" onclick="revealSay()">唸完了，聽答案 🔊</button>
     </div>`;
@@ -757,7 +757,7 @@ function revealSay(){
         <button class="btn ghost sm" onclick="micPlay('w')">▶️ 聽我錄的</button>
         <button class="btn ghost sm" onclick="speak('${esc(x.w)}')">🔊 再聽標準音</button>
       </div>
-      <p class="muted" style="margin:6px 0 12px">在心裡跟著標準音默唸一次，再挑戰看看！</p>`:''}
+      <p class="muted" style="margin:6px 0 12px">心裡跟著唸一次，發音更好聽！</p>`:''}
     <div class="opts">
       <button class="btn green" onclick="answer(true)">我唸對了 😄</button>
       <button class="btn coral" onclick="answer(false)">還不太熟 😅</button>
