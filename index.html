@@ -143,6 +143,10 @@
 
   /* 錄音 */
   .micRow{margin:10px auto 0;text-align:center;}
+  .exBig{font-size:clamp(24px,6vw,30px);font-weight:700;line-height:1.55;}
+  .fbmsg{text-align:center;font-size:22px;font-weight:800;margin-top:6px;}
+  .fbmsg.okc{color:var(--grass-d);}
+  .fbmsg.ngc{color:var(--coral-d);}
   .micDone{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
   .micBonus{color:var(--sun-d);}
   @keyframes micPulse{0%,100%{opacity:1}50%{opacity:.55}}
@@ -461,20 +465,21 @@ const MIC_CLIPS={}, MIC_META={};
 function micSupported(){
   return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) && !MIC_BLOCKED;
 }
-function micSetup(id,box,label,bonus,onDone){MIC_META[id]={box,label,bonus,onDone};}
-function micWidgetHTML(id,label,bonus){
+function micSetup(id,box,label,bonus,onDone,playLabel){MIC_META[id]={box,label,bonus,onDone,playLabel:playLabel||'▶️ 聽我錄的'};}
+function micWidgetHTML(id){
+  const m=MIC_META[id]||{label:'🎙️ 錄音',playLabel:'▶️ 聽我錄的'};
   const c=MIC_CLIPS[id];
   if(c&&c.recording)return `<button class="btn coral sm micRec" onclick="micStop('${id}')">⏺️ 錄音中…（按這裡停止）</button>`;
   if(c&&c.url)return `<div class="micDone">
-      <button class="btn ghost sm" onclick="micPlay('${id}')">▶️ 聽我錄的</button>
+      <button class="btn ghost sm" onclick="micPlay('${id}')">${m.playLabel}</button>
       <button class="btn ghost sm" onclick="micStart('${id}')">🔁 重錄</button>
     </div>`;
-  return `<button class="btn ghost sm" onclick="micStart('${id}')">${label}${bonus?` <b class="micBonus">${bonus}</b>`:''}</button>`;
+  return `<button class="btn ghost sm" onclick="micStart('${id}')">${m.label}${m.bonus?` <b class="micBonus">${m.bonus}</b>`:''}</button>`;
 }
 function micRenderInto(id){
   const meta=MIC_META[id]; if(!meta)return;
   const box=el(meta.box); if(!box)return;
-  box.innerHTML=micWidgetHTML(id,meta.label,meta.bonus);
+  box.innerHTML=micWidgetHTML(id);
 }
 async function micStart(id){
   if(MIC_REC)return;   /* 同時只能錄一個 */
@@ -734,45 +739,50 @@ function sayCard(x){
   micClear('w'); micClear('c');
   const micOn=micSupported();
   if(micOn){
-    micSetup('w','micWordBox','🎙️ 我要錄音！',null,null);
-    micSetup('c','micChalBox','🎙️ 挑戰造句','+5⭐',()=>micChallengeReward(x));
+    micSetup('w','micWordBox','🎙️ 我要錄音！',null,null,'▶️ 我唸的字');
+    micSetup('c','micChalBox','🎙️ 挑戰造句','+5⭐',()=>micChallengeReward(x),'▶️ 我造的句');
   }
   return `<div class="prompt">🗣️ 大聲唸出這個字！</div>
     <div class="bigword en">${esc(x.w)}</div>
     <div class="gloss">${esc(x.zh||'')}</div>
-    ${micOn?`<div class="micRow" id="micWordBox">${micWidgetHTML('w','🎙️ 我要錄音！',null)}</div>
-    <div class="micRow" id="micChalBox">${micWidgetHTML('c','🎙️ 挑戰造句','+5⭐')}</div>`:''}
+    ${micOn?`<div class="micRow" id="micWordBox">${micWidgetHTML('w')}</div>
+    <div class="micRow" id="micChalBox">${micWidgetHTML('c')}</div>`:''}
     <div class="fb" style="padding-top:6px">
       <button class="btn big" onclick="revealSay()">唸完了，聽答案 🔊</button>
     </div>`;
 }
 function revealSay(){
-  /* 拍二：標準音自動播放，趁回聲記憶還熱立刻自評（只評字，不離場）；若有拍一的自錄音，加 ECHO 比對 */
+  /* 拍二：整頁重繪——標準音自動播放，趁回聲記憶還熱立刻自評（只評字，不離場）；
+     若拍一有錄單字，顯示唯一一組 ECHO 比對；拍一的錄音按鈕不再殘留 */
   const x=S.q[S.i].x;
   speak(x.w);
-  const fb=document.querySelector('.fb');
   const hasRec=micHas('w');
-  fb.innerHTML=`
+  el('stage').innerHTML=`<div class="prompt">🗣️ 大聲唸出這個字！</div>
+    <div class="bigword en">${esc(x.w)}</div>
+    <div class="gloss">${esc(x.zh||'')}</div>
     ${hasRec?`<div class="echoRow">
-        <button class="btn ghost sm" onclick="micPlay('w')">▶️ 聽我錄的</button>
-        <button class="btn ghost sm" onclick="speak('${esc(x.w)}')">🔊 再聽標準音</button>
+        <button class="btn ghost sm" onclick="micPlay('w')">▶️ 我唸的字</button>
+        <button class="btn ghost sm" onclick="speak('${esc(x.w)}')">🔊 聽標準音</button>
       </div>
-      <p class="muted" style="margin:6px 0 12px">心裡跟著唸一次，發音更好聽！</p>`:''}
-    <div class="opts">
-      <button class="btn green" onclick="answer(true)">我唸對了 😄</button>
-      <button class="btn coral" onclick="answer(false)">還不太熟 😅</button>
+      <p class="muted" style="margin:6px 0 0;text-align:center">心裡跟著唸一次，發音更好聽！</p>`:''}
+    <div class="fb">
+      <div class="opts">
+        <button class="btn green" onclick="answer(true)">我唸對了 😄</button>
+        <button class="btn coral" onclick="answer(false)">還不太熟 😅</button>
+      </div>
     </div>`;
 }
-/* 拍三：過例句——A 聽＋視讀、B 跟讀、C 先唸再對答案皆可，但離場門鎖在「聽過一次」上 */
+/* 拍三：整頁重繪——例句是唯一主角，放大呈現；不殘留任何錄音按鈕。
+   A 聽＋視讀、B 跟讀、C 先唸再對答案皆可，離場門鎖在「聽過一次」上 */
 function sentenceBeat(ok,x){
-  const fb=el('fb')||document.querySelector('.fb');
-  fb.classList.add(ok?'ok':'ng');
-  fb.innerHTML=`
-    <div class="msg">${ok?'🎉 太棒了！':'💪 記下來，等等再挑戰！'}</div>
-    <div class="prompt" style="margin:4px 0 8px">最後一步：例句時間！先自己唸、或先聽都可以</div>
-    <p class="ex">${esc(x.s)}</p>
-    <button class="btn big mt" onclick="speak('${esc(x.s)}',0.95);el('sentNext').classList.remove('hid')">🔊 聽例句</button>
-    <button class="btn green big mt hid" id="sentNext" onclick="nextCard()">下一題 →</button>`;
+  el('stage').innerHTML=`
+    <div class="fbmsg ${ok?'okc':'ngc'}">${ok?'🎉 太棒了！':'💪 記下來，等等再挑戰！'}</div>
+    <div class="prompt" style="margin:14px 0 10px">最後一步：例句時間！先自己唸、或先聽都可以</div>
+    <p class="ex exBig">${esc(x.s)}</p>
+    <div class="fb">
+      <button class="btn big" onclick="speak('${esc(x.s)}',0.95);el('sentNext').classList.remove('hid')">🔊 聽例句</button>
+      <button class="btn green big mt hid" id="sentNext" onclick="nextCard()">下一題 →</button>
+    </div>`;
 }
 
 /* ---- 卡片：句子回音卡（雄鷹回鍋維護升級版，不評分、不影響等級） ---- */
