@@ -346,8 +346,8 @@ const TEST=new URLSearchParams(location.search).has('test');
 const KEY=TEST?'word-birds-test-v1':'word-birds-v1', BAK=KEY+'-bak';
 const INTERVALS=[0,1,2,4,8,16];               /* 各等級到下次複習的天數 */
 const MAXLV={master:5,familiar:5,recognize:4};
-const STAGE=['🥚','🐣','🐤','🐦','🦜','🦅'];
-const STAGE_NAME=['蛋','孵化','雛鳥','小鳥','彩鸚','金鷹'];
+const STAGE=['🥚','🐣','🐤','🐦','🐦‍⬛','🦅'];
+const STAGE_NAME=['蛋','孵化','雛鳥','小鳥','成鳥','雄鷹'];
 const TIER_ZH={master:'熟用',familiar:'熟悉',recognize:'認識'};
 const REVIEW_CAP=30, NEW_CAP=5, XP_HIT=10, XP_RETRY=5;
 /* 鷹芒勳章：連續 MEDAL_EVERY 天得 1 枚（上限 MEDAL_MAX），落練 1 天自動消耗 1 枚保住連續紀錄 */
@@ -778,7 +778,7 @@ function finishSession(){
   S=null;
 }
 const BADGES={first:'第一次練習！',s3:'連續 3 天 🔥',s7:'連續 7 天 🔥🔥',s14:'連續 14 天 🔥🔥🔥',
-  g10:'10 隻金鷹 🦅',g50:'50 隻金鷹 🦅🦅',perfect:'全對場！'};
+  g10:'10 隻雄鷹 🦅',g50:'50 隻雄鷹 🦅🦅',perfect:'全對場！'};
 function checkBadges(acc){
   const has=db.stats.badges, add=k=>{if(!has.includes(k)){has.push(k);S.newBadges.push(BADGES[k]);}};
   add('first');
@@ -824,7 +824,7 @@ function renderAviary(){
     <div class="aviGrid">${buckets[i].map(x=>`<div class="aviCell ${isGrad(x)?'grad':''}" onclick="tapAvi('${esc(x.w)}')">
       ${canEvolve(x)?'<span class="zap">⚡</span>':''}<div class="em">${stageOf(x)}</div><div class="w en">${esc(x.w)}</div></div>`).join('')}</div>`).join('');
   el('view').innerHTML=`
-    <h2>我的鳥園　<span class="muted" style="font-size:14px">${buckets[5].length}/${words.length} 隻金鷹</span></h2>
+    <h2>我的鳥園　<span class="muted" style="font-size:14px">${buckets[5].length}/${words.length} 隻雄鷹</span></h2>
     ${bar}
     <p class="muted" style="margin-bottom:4px">點上面的階段可以只看那一區，再點一次回到全部。</p>
     ${secs||'<p class="muted mt">這一區還沒有鳥！</p>'}
@@ -847,15 +847,15 @@ function renderManual(){
     ['🐣','孵化','答對 1 次','休息 1 天再考'],
     ['🐤','雛鳥','再答對 1 次','休息 2 天再考'],
     ['🐦','小鳥','再答對 1 次','休息 4 天再考'],
-    ['🦜','彩鸚','再答對 1 次','休息 8 天再考'],
-    ['🦅','金鷹','再答對 1 次，畢業！','偶爾回來考考你']];
+    ['🐦‍⬛','成鳥','再答對 1 次','休息 8 天再考'],
+    ['🦅','雄鷹','再答對 1 次，畢業！','偶爾回來考考你']];
   el('view').innerHTML=`
     <h2>📜 馴鷹祕笈</h2>
     <p class="muted" style="margin-bottom:12px">馴鷹師的全部規則都在這裡。看懂祕笈，升級更快！</p>
     <div class="card">
       <h2>🐣 鳥兒的進化之路</h2>
       ${stages.map(s=>`<div class="prow"><span style="font-size:17px">${s[0]} <b>${s[1]}</b></span><span style="text-align:right;color:var(--ink2);font-size:13px;font-weight:700">${s[2]}<br>${s[3]}</span></div>`).join('')}
-      <p class="muted" style="margin-top:8px">升級只算「休息完再考」的那一次答對——記憶要過夜才算數！有些任務比較簡單的字，到 🦜 就直接變金鷹。</p>
+      <p class="muted" style="margin-top:8px">升級只算「休息完再考」的那一次答對——記憶要過夜才算數！有些任務比較簡單的字，到 🐦‍⬛ 成鳥就直接變雄鷹。</p>
     </div>
     <div class="card mt">
       <h2>😅 答錯了會怎樣？</h2>
@@ -901,7 +901,7 @@ function renderParent(){
       <div class="prow"><span>馴鷹師稱號</span><b>👑 LV.${rankIdx(db.stats.xp)+1} ${RANKS[rankIdx(db.stats.xp)][1]}（${db.stats.xp} ⭐）</b></div>
       <div class="prow"><span>連續天數</span><b>🔥 ${effStreak()} 天（最高 ${db.stats.best} 天）</b></div>
       <div class="prow"><span>${MEDAL} ${MEDAL_NAME}</span><b>${db.stats.shields} 枚</b></div>
-      <div class="prow"><span>起飛（金鷹）</span><b>${grad} / ${words.length} 字</b></div>
+      <div class="prow"><span>起飛（雄鷹）</span><b>${grad} / ${words.length} 字</b></div>
       <div class="prow"><span>今日待複習</span><b>${dueN} 字</b></div>
       <div class="prow"><span>字庫組成</span><b>熟用 ${byTier.master}・熟悉 ${byTier.familiar}・認識 ${byTier.recognize}</b></div>
       ${(()=>{const log=(db.stats.spellLog||[]).filter(e=>dayDiff(e.d,t)<=6);
