@@ -661,16 +661,26 @@ function sayCard(x){
     </div>`;
 }
 function revealSay(){
+  /* 拍二：標準音自動播放，趁回聲記憶還熱立刻自評（只評字，不離場） */
   const x=S.q[S.i].x;
   speak(x.w);
   const fb=document.querySelector('.fb');
   fb.innerHTML=`
-    ${x.s?`<button class="btn ghost sm" onclick="speak('${esc(x.s)}',0.95)">🔊 聽例句</button>
-      <p class="ex mt">${esc(x.s)}</p>`:''}
     <div class="opts">
       <button class="btn green" onclick="answer(true)">我唸對了 😄</button>
       <button class="btn coral" onclick="answer(false)">還不太熟 😅</button>
     </div>`;
+}
+/* 拍三：過例句——A 聽＋視讀、B 跟讀、C 先唸再對答案皆可，但離場門鎖在「聽過一次」上 */
+function sentenceBeat(ok,x){
+  const fb=el('fb')||document.querySelector('.fb');
+  fb.classList.add(ok?'ok':'ng');
+  fb.innerHTML=`
+    <div class="msg">${ok?'🎉 太棒了！':'💪 記下來，等等再挑戰！'}</div>
+    <div class="prompt" style="margin:4px 0 8px">最後一步：例句時間！先自己唸、或先聽都可以</div>
+    <p class="ex">${esc(x.s)}</p>
+    <button class="btn big mt" onclick="speak('${esc(x.s)}',0.95);el('sentNext').classList.remove('hid')">🔊 聽例句</button>
+    <button class="btn green big mt hid" id="sentNext" onclick="nextCard()">下一題 →</button>`;
 }
 
 /* ---- 作答結算 ---- */
@@ -698,7 +708,8 @@ function answer(ok){
     }else if(item.tries<2){S.q.push({x,type:item.type,tries:item.tries+1});}
   }
   save();
-  showFeedback(ok,x,first,item.type);
+  if(item.type==='say'&&x.s)sentenceBeat(ok,x);
+  else showFeedback(ok,x,first,item.type);
 }
 function addXp(n){db.stats.xp+=n;S.xp+=n;setHeader();
   const f=document.createElement('div');f.className='xpfloat';f.textContent='+'+n+' ⭐';
