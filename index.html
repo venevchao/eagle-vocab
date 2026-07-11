@@ -190,6 +190,8 @@
   #cfx{position:fixed;inset:0;pointer-events:none;z-index:50;}
   .hid{display:none !important;}
   .mt{margin-top:14px;} .mtl{margin-top:22px;}
+  .testbar{background:#6D28D9;color:#fff;text-align:center;font-weight:800;font-size:13px;
+           padding:6px 10px;border-radius:0 0 12px 12px;}
 
   /* ===== 夜間鳥園（跟隨系統外觀） ===== */
   @media (prefers-color-scheme: dark){
@@ -225,6 +227,7 @@
     <div class="wrap">
       <button id="nav-home" onclick="go('home')"><span class="ic">🏠</span>今天</button>
       <button id="nav-avi" onclick="go('avi')"><span class="ic">🐦</span>鳥園</button>
+      <button id="nav-man" onclick="go('man')"><span class="ic">📜</span>祕笈</button>
       <button id="nav-par" onclick="go('par')"><span class="ic">⚙️</span>家長</button>
     </div>
   </nav>
@@ -338,7 +341,9 @@ const SEED = [
  ['world','世界','The world is big.',10]
 ].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'master',batch:'Fry 2nd 100 (List '+a[3]+')'}));
 
-const KEY='word-birds-v1', BAK='word-birds-v1-bak';
+/* 測試模式：網址加 ?test 即啟用，資料存到完全獨立的 key，與正式紀錄互不干擾 */
+const TEST=new URLSearchParams(location.search).has('test');
+const KEY=TEST?'word-birds-test-v1':'word-birds-v1', BAK=KEY+'-bak';
 const INTERVALS=[0,1,2,4,8,16];               /* 各等級到下次複習的天數 */
 const MAXLV={master:5,familiar:5,recognize:4};
 const STAGE=['🥚','🐣','🐤','🐦','🦜','🦅'];
@@ -479,8 +484,8 @@ function cardType(x){
 /* ================= 導覽 ================= */
 let VIEWN='home';
 function go(v){VIEWN=v;
-  ['home','avi','par'].forEach(n=>el('nav-'+n).classList.toggle('on',n===v));
-  if(v==='home')renderHome(); else if(v==='avi')renderAviary(); else renderParent();
+  ['home','avi','man','par'].forEach(n=>el('nav-'+n).classList.toggle('on',n===v));
+  if(v==='home')renderHome(); else if(v==='avi')renderAviary(); else if(v==='man')renderManual(); else renderParent();
   window.scrollTo(0,0);
 }
 function setHeader(){el('hStreak').textContent=effStreak();el('hXp').textContent=db.stats.xp;
@@ -822,6 +827,50 @@ function tapAvi(w){
   sfx.tap();
 }
 
+/* ================= 馴鷹祕笈（規則書） ================= */
+function renderManual(){
+  setHeader();
+  const ri=rankIdx(db.stats.xp);
+  const stages=[
+    ['🥚','蛋','新單字剛加入鳥園','馬上就會考你'],
+    ['🐣','孵化','答對 1 次','休息 1 天再考'],
+    ['🐤','雛鳥','再答對 1 次','休息 2 天再考'],
+    ['🐦','小鳥','再答對 1 次','休息 4 天再考'],
+    ['🦜','彩鸚','再答對 1 次','休息 8 天再考'],
+    ['🦅','金鷹','再答對 1 次，畢業！','偶爾回來考考你']];
+  el('view').innerHTML=`
+    <h2>📜 馴鷹祕笈</h2>
+    <p class="muted" style="margin-bottom:12px">馴鷹師的全部規則都在這裡。看懂祕笈，升級更快！</p>
+    <div class="card">
+      <h2>🐣 鳥兒的進化之路</h2>
+      ${stages.map(s=>`<div class="prow"><span style="font-size:17px">${s[0]} <b>${s[1]}</b></span><span style="text-align:right;color:var(--ink2);font-size:13px;font-weight:700">${s[2]}<br>${s[3]}</span></div>`).join('')}
+      <p class="muted" style="margin-top:8px">升級只算「休息完再考」的那一次答對——記憶要過夜才算數！有些任務比較簡單的字，到 🦜 就直接變金鷹。</p>
+    </div>
+    <div class="card mt">
+      <h2>😅 答錯了會怎樣？</h2>
+      <p class="ex" style="text-align:left">鳥兒退一級（最多退到 🐣，不會變回蛋），今天會再考你一次，直到你答對為止。</p>
+      <p class="ex" style="text-align:left;margin-top:6px">放心——⭐ 星星永遠不會被扣，👑 稱號永遠不會掉級！</p>
+    </div>
+    <div class="card mt">
+      <h2>⭐ 星星怎麼賺</h2>
+      <div class="prow"><span>第一次就答對</span><b>+10 ⭐</b></div>
+      <div class="prow"><span>再挑戰時答對</span><b>+5 ⭐</b></div>
+      <div class="prow"><span>⚡ 拼字秒殺（一次拼對、超快完成）</span><b>再 +2 ⭐</b></div>
+    </div>
+    <div class="card mt">
+      <h2>🎖️ 鷹芒勳章</h2>
+      <p class="ex" style="text-align:left">每連續練 5 天，得到 1 枚（最多存 5 枚）。哪天忘了練，勳章會自動替你飛一天，保住 🔥 連續紀錄！</p>
+    </div>
+    <div class="card mt">
+      <h2>👑 馴鷹師天梯</h2>
+      ${RANKS.map((r,i)=>`<div class="prow"><span>${i<ri?'✅':i===ri?'👑':'🔒'} LV.${i+1} <b>${r[1]}</b></span><b>${r[0]} ⭐${i===ri?'　⬅ 你在這裡':''}</b></div>`).join('')}
+    </div>
+    <div class="card mt">
+      <h2>⚡ 鳥園裡的閃電</h2>
+      <p class="ex" style="text-align:left">鳥園裡帶 ⚡ 的鳥＝今天練習答對就會進化，快去收下牠們！</p>
+    </div>`;
+}
+
 /* ================= 家長頁 ================= */
 function renderParent(){
   setHeader();
@@ -920,6 +969,9 @@ function resetAll(){
 
 /* ================= 啟動 ================= */
 document.addEventListener('touchstart',function once(){ac();document.removeEventListener('touchstart',once);},{passive:true});
+if(TEST){const tb=document.createElement('div');tb.className='testbar';
+  tb.textContent='🧪 測試模式：資料完全獨立，不會影響正式紀錄';
+  el('app').prepend(tb);}
 go('home');
 </script>
 </body>
