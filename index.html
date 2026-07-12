@@ -536,13 +536,30 @@ function pickVoice(){
        ||vs.find(v=>/en[-_]US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null;
 }
 if(window.speechSynthesis){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+/* 語音診斷：環形紀錄最近 40 筆 TTS 事件（獨立 key，不進進度備份），供 iPad 無聲問題排錯 */
+const TTSLOG_KEY='word-birds-ttslog';
+function ttsLog(ev,txt){
+  try{
+    const a=JSON.parse(localStorage.getItem(TTSLOG_KEY)||'[]');
+    a.push({t:new Date().toTimeString().slice(0,8),ev,txt:String(txt).slice(0,18),
+      v:(speechSynthesis.getVoices()||[]).length,p:speechSynthesis.paused?1:0,s:speechSynthesis.speaking?1:0});
+    if(a.length>40)a.splice(0,a.length-40);
+    localStorage.setItem(TTSLOG_KEY,JSON.stringify(a));
+  }catch(e){}
+}
 function speak(text,rate,onend){
   if(!window.speechSynthesis)return;
+  micStopPlay();   /* TTS 開口前先停掉自錄音播放，避免重疊 */
+  try{if(speechSynthesis.paused)speechSynthesis.resume();}catch(e){}  /* iOS 偶發卡在 paused 狀態 */
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
   u.lang='en-US'; if(VOICE)u.voice=VOICE; u.rate=rate||0.85; u.pitch=1.05;
   if(onend)u.onend=onend;
-  speechSynthesis.speak(u);
+  u.onstart=()=>ttsLog('start',text);
+  u.onerror=e=>ttsLog('error:'+(e&&e.error||'?'),text);
+  ttsLog('call',text);
+  /* iOS Safari：cancel 後立刻 speak 偶爾被吞，隔一拍再說 */
+  setTimeout(()=>{try{speechSynthesis.speak(u);}catch(e){ttsLog('throw',text);}},60);
 }
 
 /* ================= 錄音（麥克風，全部可選、絕不擋路） ================= */
@@ -596,7 +613,12 @@ async function micStart(id){
   }
 }
 function micStop(id){if(MIC_REC&&MIC_REC.state==='recording')MIC_REC.stop();}
-function micPlay(id){const c=MIC_CLIPS[id];if(c&&c.url)new Audio(c.url).play();}
+let MIC_AUDIO=null;
+function micStopPlay(){if(MIC_AUDIO){try{MIC_AUDIO.pause();}catch(e){}MIC_AUDIO=null;}}
+function micPlay(id){const c=MIC_CLIPS[id];if(!c||!c.url)return;
+  micStopPlay();
+  try{speechSynthesis.cancel();}catch(e){}   /* 聽自己的錄音時，也停掉還在唸的 TTS */
+  MIC_AUDIO=new Audio(c.url);MIC_AUDIO.play();}
 function micHas(id){return !!(MIC_CLIPS[id]&&MIC_CLIPS[id].url);}
 function micClear(id){if(MIC_CLIPS[id]&&MIC_CLIPS[id].url)URL.revokeObjectURL(MIC_CLIPS[id].url);delete MIC_CLIPS[id];}
 function micHideAll(){document.querySelectorAll('.micRow').forEach(e=>e.classList.add('hid'));}
@@ -688,7 +710,7 @@ function renderHome(){
       <div class="stat"><div class="n egg">🥚 ${eggs}</div><div class="l">等待孵化</div></div>
     </div>
     <button class="btn big ${doneToday?'ghost':''}" onclick="startSession()">
-      ${doneToday?'再練一輪 💪':'開始今天的練習 ▶'}</button>
+      ${doneToday?'自由練習一輪 💪':'開始今天的練習 ▶'}</button>
     <p class="muted mt" style="text-align:center">
       ${dueN?('今天有 <b class="due">'+dueN+'</b> 隻鳥準備好進化！'):'今天沒有鳥等著進化，練了算加分！'}　🔥 連續 <b class="streak">${effStreak()}</b> 天${db.stats.best>effStreak()?'（最高 '+db.stats.best+' 天）':''}</p>`;
 }
@@ -701,7 +723,9 @@ function startSession(){
   if(window.speechSynthesis){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}
   const q=buildQueue();
   if(!q.length){el('view').innerHTML='<div class="card"><h2>沒有可以練的字！</h2><p class="muted">請家長先在「家長」頁新增單字。</p></div>';return;}
-  S={q,i:0,total:q.length,firstOk:0,firstNg:0,xp:0,evolved:[],newBadges:[],rank0:rankIdx(db.stats.xp)};
+  /* 當日已達標後的加練＝自由練習：鳥兒等級照算，星星不計（與家長口頭規則一致，也是天梯速度的閥門） */
+  const doneToday=!!(db.stats.days[today()]&&db.stats.days[today()].goal);
+  S={q,i:0,total:q.length,firstOk:0,firstNg:0,xp:0,evolved:[],newBadges:[],rank0:rankIdx(db.stats.xp),freeplay:doneToday};
   renderCard();
 }
 function renderCard(){
@@ -774,7 +798,7 @@ function spellCard(x){
   const decoys='abcdefghijklmnopqrstuvwxyz'.split('').filter(c=>!x.w.toLowerCase().includes(c));
   const decoyN=x.w.length<6?2:3;   /* N<6 給 +2、N>=6 給 +3；N>9 不再加碼，見決策紀錄 */
   const tiles=shuffle(letters.concat(shuffle(decoys).slice(0,decoyN)));
-  SP={ans:[],tiles,t0:Date.now(),undo:0};
+  SP={ans:[],tiles,t0:null,undo:0};   /* t0 於第一次按字母磚時才起算（排除聽音與思考時間） */
   /* 長字（N>6）縮小格子與字級，讓拼字結果永遠排成單行，不會斷成兩行 */
   const n=letters.length;
   const slotw=n<=6?44:n<=8?36:n<=10?30:24;
@@ -791,14 +815,15 @@ function spellCard(x){
 function tapTile(i){
   const x=S.q[S.i].x;
   if(!SP||SP.ans.length>=x.w.length)return;
+  if(!SP.t0)SP.t0=Date.now();   /* 秒殺計時從第一次按磚起算 */
   sfx.tap();
   SP.ans.push(i); el('t'+i).classList.add('used'); paintSlots();
   if(SP.ans.length===x.w.length){
     const got=SP.ans.map(j=>SP.tiles[j]).join('');
     const ok=got.toLowerCase()===x.w.toLowerCase();
-    /* 順暢度 Phase 1：零退格＋限時內完成＝秒殺；每題靜默記錄供日後校準門檻 */
+    /* 順暢度 Phase 2 門檻（2026-07-13 校正）：從第一磚到完成，零退格＋每字母 0.9 秒＋1.5 秒緩衝 */
     const ms=Date.now()-SP.t0, item=S.q[S.i];
-    item.fluent=ok&&SP.undo===0&&ms<=3000+1000*x.w.length;
+    item.fluent=ok&&SP.undo===0&&ms<=1500+900*x.w.length;
     if(!db.stats.spellLog)db.stats.spellLog=[];
     db.stats.spellLog.push({w:x.w.toLowerCase(),ms,un:SP.undo,ok:ok?1:0,fl:item.fluent?1:0,d:today()});
     if(db.stats.spellLog.length>300)db.stats.spellLog.splice(0,db.stats.spellLog.length-300);
@@ -927,7 +952,9 @@ function answer(ok){
   if(item.type==='say'&&x.s)sentenceBeat(ok,x);
   else showFeedback(ok,x,first,item.type);
 }
-function addXp(n){db.stats.xp+=n;S.xp+=n;setHeader();
+function addXp(n){
+  if(S&&S.freeplay)return;   /* 自由練習不計星星 */
+  db.stats.xp+=n;S.xp+=n;setHeader();
   const f=document.createElement('div');f.className='xpfloat';f.textContent='+'+n+' ⭐';
   document.body.appendChild(f);setTimeout(()=>f.remove(),1000);}
 function showFeedback(ok,x,first,type){
@@ -945,7 +972,7 @@ function showFeedback(ok,x,first,type){
   if(!ok)speak(x.w);
   const nb=fb.querySelector('.btn'); if(nb)nb.focus();
 }
-function nextCard(){micForceStopIfActive();sfx.tap();S.i++;renderCard();}
+function nextCard(){micForceStopIfActive();micStopPlay();sfx.tap();S.i++;renderCard();}
 
 /* ---- Session 結束 ---- */
 function finishSession(){
@@ -980,7 +1007,7 @@ function finishSession(){
       <div class="big">${stars===3?'🏆':stars===2?'🎉':'💪'}</div>
       <h2 style="font-size:26px">今天的練習完成！</h2>
       <div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
-      <p class="muted">答對 ${S.firstOk} 題 ・ 再挑戰 ${S.firstNg} 題 ・ 獲得 ${S.xp} ⭐</p>
+      <p class="muted">答對 ${S.firstOk} 題 ・ 再挑戰 ${S.firstNg} 題 ・ ${S.freeplay?'自由練習，鳥兒升級照算':'獲得 '+S.xp+' ⭐'}</p>
       ${S.evolved.length?`<h2 class="mtl">🎊 進化了！</h2>
         <div class="evolist">${S.evolved.map(e=>`<span class="evo">${e.em} <span class="en">${esc(e.w)}</span></span>`).join('')}</div>`:''}
       ${rankIdx(db.stats.xp)>S.rank0?`<div class="badgePop">👑 升級！你現在是「${RANKS[rankIdx(db.stats.xp)][1]}」！</div>`:''}
@@ -1101,6 +1128,7 @@ function renderManual(){
       <p class="lede">讓星星引領著你，從新手一路登上蒼穹。</p>
       <div class="sublabel">⭐ 星星怎麼賺</div>
       ${earn}
+      <p class="note"><span class="f">🪶</span>星星只算每天的第一輪；之後的自由練習，鳥兒升級照算、星星不計。</p>
       <div class="sublabel" style="margin-top:16px">👑 馴鷹師天梯</div>
       <div class="ladder">${tiers}</div>
     </section>
@@ -1184,7 +1212,25 @@ function renderParent(){
       <textarea id="ioBox" class="mt hid" placeholder="匯出的進度文字會出現在這裡；匯入時把備份文字貼進來再按確認。"></textarea>
       <button class="btn sm mt hid" id="ioConfirm" onclick="importData()">確認匯入</button>
       <p class="muted mt" id="ioMsg"></p>
+    </div>
+
+    <div class="card mt">
+      <h2>🔧 語音診斷</h2>
+      <p class="muted" style="margin-bottom:8px">若遇到「範例音檔沒聲音」：先按「測試發音」，再按「顯示紀錄」，把內容複製或截圖給 Claude。</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn ghost sm" onclick="ttsTest()">🔊 測試發音</button>
+        <button class="btn ghost sm" onclick="ttsShow()">顯示語音紀錄</button>
+      </div>
+      <textarea id="ttsBox" class="mt hid" readonly></textarea>
     </div>`;
+}
+function ttsTest(){speak('Hello! Testing one two three.');setTimeout(ttsShow,1500);}
+function ttsShow(){
+  const b=el('ttsBox'); if(!b)return; b.classList.remove('hid');
+  try{
+    const a=JSON.parse(localStorage.getItem(TTSLOG_KEY)||'[]');
+    b.value=a.slice(-20).reverse().map(e=>`${e.t} ${e.ev} [voices:${e.v} paused:${e.p} speaking:${e.s}] ${e.txt}`).join('\n')||'（還沒有紀錄）';
+  }catch(e){b.value='讀取失敗';}
 }
 function importWords(){
   const raw=el('impTxt').value||'';
