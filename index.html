@@ -24,6 +24,8 @@
     --line:#CFE3F3;
     --chip:#DDEEFB;
     --gold:#F5B301;
+    --gold-d:#D99400;
+    --seal:linear-gradient(150deg,#FFCE5A,#F5A814);
     --teal:#1D86A6;       /* 中文語意強調色 */
     --r:18px;
   }
@@ -128,7 +130,7 @@
   .undo{margin:14px auto 0;display:block;}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
   @media (prefers-reduced-motion:reduce){
-    .mascot .bird,.opt.ng{animation:none;}
+    .mascot .bird,.opt.ng,.sendoff .bird{animation:none;}
     .pbar i{transition:none;}
     .btn.micRec{animation:none;}
   }
@@ -207,13 +209,92 @@
   .testbar{background:#6D28D9;color:#fff;text-align:center;font-weight:800;font-size:13px;
            padding:6px 10px;border-radius:0 0 12px 12px;}
 
+  /* ===== 馴鷹祕笈 ===== */
+  .mCover{text-align:center;padding:14px 0 6px;}
+  .mCover .em{font-size:46px;line-height:1;filter:drop-shadow(0 3px 5px rgba(180,130,10,.35));}
+  .mCover .ttl{font-size:29px;font-weight:800;letter-spacing:3px;margin-top:4px;}
+  .mCover .sub{color:var(--ink2);font-weight:700;font-size:15px;margin-top:6px;}
+  .divider{display:flex;align-items:center;gap:10px;margin:16px 2px 4px;color:var(--gold-d);}
+  .divider::before,.divider::after{content:'';flex:1;height:2px;
+      background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .divider .f{font-size:15px;}
+  .vol{background:var(--card);border:2px solid var(--line);border-radius:var(--r);
+       padding:18px 18px 20px;box-shadow:0 3px 0 rgba(28,58,94,.06);margin-top:16px;}
+  .volHead{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .seal{width:46px;height:46px;flex:none;border-radius:14px;background:var(--seal);
+        display:grid;place-items:center;color:#fff;font-weight:700;font-size:19px;letter-spacing:1px;
+        font-family:"Copperplate","Copperplate Gothic Light","Trajan Pro",Georgia,serif;
+        text-shadow:0 1px 1px rgba(140,90,10,.5);
+        box-shadow:0 3px 8px rgba(214,148,0,.4),inset 0 0 0 2px rgba(255,255,255,.35);}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:3px;color:var(--gold-d);}
+  .vt{font-size:20px;font-weight:800;line-height:1.2;}
+  .lede{font-size:17px;font-weight:800;line-height:1.6;color:var(--ink2);margin-bottom:14px;}
+  .hl{background:linear-gradient(transparent 58%,rgba(245,179,1,.42) 58%);padding:0 2px;border-radius:2px;}
+  .evoLadder{position:relative;margin:2px 0 8px;}
+  .evoLadder::before{content:'';position:absolute;left:22px;top:26px;bottom:30px;width:3px;
+      background:linear-gradient(var(--line),var(--gold));border-radius:3px;z-index:0;}
+  .evoRow{display:flex;align-items:center;gap:13px;padding:6px 0;position:relative;z-index:1;}
+  .evoDot{width:46px;height:46px;flex:none;border-radius:50%;display:grid;place-items:center;
+          font-size:25px;background:var(--chip);border:2px solid var(--line);}
+  .evoName{font-weight:800;font-size:16px;}
+  .evoPill{margin-left:auto;background:var(--chip);color:var(--ink2);font-weight:700;
+           font-size:13px;padding:5px 13px;border-radius:999px;white-space:nowrap;}
+  .evoRow.eagle .evoDot{background:var(--seal);border-color:var(--gold);
+      box-shadow:0 0 0 5px rgba(245,179,1,.18);}
+  .evoRow.eagle .evoName{color:var(--gold-d);}
+  .evoRow.eagle .evoPill{background:var(--seal);color:#fff;}
+  .note{color:var(--ink2);font-size:13px;font-weight:700;margin-top:6px;text-align:center;}
+  .note .f{color:var(--gold-d);margin-right:4px;}
+  .say{font-size:16px;font-weight:600;line-height:1.75;color:var(--ink);}
+  .promise{margin-top:14px;background:linear-gradient(135deg,rgba(63,191,119,.14),rgba(29,134,166,.12));
+           border:2px solid rgba(63,191,119,.35);border-radius:14px;padding:13px 15px;
+           font-weight:800;font-size:16px;line-height:1.6;text-align:center;}
+  .sublabel{font-size:15px;font-weight:800;letter-spacing:.5px;color:var(--ink);
+            margin:6px 0 9px;display:flex;align-items:center;gap:6px;}
+  .earn{display:flex;justify-content:space-between;align-items:center;padding:8px 0;
+        border-bottom:1px dashed var(--line);font-size:15px;font-weight:600;}
+  .earn:last-child{border-bottom:none;}
+  .earn b{font-variant-numeric:tabular-nums;color:var(--gold-d);font-size:16px;white-space:nowrap;}
+  .ladder{margin-top:8px;border-radius:14px;overflow:hidden;border:2px solid var(--line);
+          background:linear-gradient(180deg,transparent 55%,rgba(245,179,1,.10));}
+  .tier{display:flex;align-items:center;gap:10px;padding:10px 13px;border-bottom:1px solid var(--line);}
+  .tier:last-child{border-bottom:none;}
+  .tier .st{font-size:16px;width:20px;text-align:center;flex:none;}
+  .tier .lv{font-size:12px;font-weight:800;color:var(--ink2);font-variant-numeric:tabular-nums;width:36px;flex:none;}
+  .tier .tn{font-weight:800;font-size:15px;}
+  .tier .req{margin-left:auto;font-size:12px;font-weight:700;color:var(--ink2);
+             font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .tier.done{opacity:.6;}
+  .tier.done .tn{font-weight:700;}
+  .tier.here{background:linear-gradient(90deg,rgba(245,179,1,.22),rgba(245,179,1,.06));
+             box-shadow:inset 3px 0 0 var(--gold);}
+  .tier.here .tn{color:var(--gold-d);}
+  .tier.here .youAre{margin-left:6px;font-size:11px;font-weight:800;color:#fff;
+             background:var(--gold-d);padding:2px 7px;border-radius:999px;vertical-align:middle;}
+  .tier.summit{background:linear-gradient(90deg,rgba(245,179,1,.24),rgba(29,134,166,.13));}
+  .tier.summit .tn{color:#0A6F92;}
+  .medalRow{display:flex;gap:9px;justify-content:center;margin-top:12px;}
+  .medalBox{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:24px;
+        background:var(--chip);border:2px solid var(--line);}
+  .medalBox.on{background:linear-gradient(150deg,#FFF3D0,#FFE49E);border-color:var(--gold);}
+  .medalBox.off{opacity:.5;}
+  .sendoff{margin-top:16px;text-align:center;padding:26px 20px;border-radius:var(--r);color:#4A2E14;
+           background:linear-gradient(135deg,#F0D48E 0%,#D8B063 32%,#B58A46 64%,#8A6535 100%);
+           border:2px solid rgba(150,105,50,.5);
+           box-shadow:0 8px 20px rgba(120,85,35,.35),inset 0 0 0 1px rgba(255,240,205,.4),inset 0 -3px 7px rgba(120,80,35,.28);}
+  .sendoff .bird{font-size:44px;display:block;margin-bottom:8px;animation:soar 3.5s ease-in-out infinite;
+                 filter:drop-shadow(0 2px 3px rgba(90,60,25,.4));}
+  .sendoff .line{font-size:20px;font-weight:800;line-height:1.5;letter-spacing:.5px;
+                 text-shadow:0 1px 0 rgba(255,245,215,.4);}
+  @keyframes soar{0%,100%{transform:translateY(0) rotate(-4deg);}50%{transform:translateY(-9px) rotate(4deg);}}
+
   /* ===== 夜間鳥園（跟隨系統外觀） ===== */
   @media (prefers-color-scheme: dark){
     :root{
       --sky:#0F1E2E; --card:#1A2B3E; --ink:#E9F1FA; --ink2:#9DB3CA;
       --sun:#FFAB2E; --sun-d:#B87E12; --grass:#45C87E; --grass-d:#2E9C5E;
       --coral:#FF8A80; --coral-d:#D9645A; --line:#2C4155; --chip:#233850;
-      --gold:#FFC53D; --teal:#6BCBE0;
+      --gold:#FFC53D; --gold-d:#FFD46A; --teal:#6BCBE0;
     }
     body{background:linear-gradient(180deg,#0B1826 0%,#102132 45%,#12271F 100%);background-attachment:fixed;}
     nav{background:rgba(13,23,36,.96);}
@@ -224,6 +305,9 @@
     .opt.ng{background:#3A2126;}
     .badgePop,.aviCell.grad{background:#2E2609;}
     textarea,select,input[type=text]{background:var(--card);}
+    .promise{background:linear-gradient(135deg,rgba(69,200,126,.16),rgba(107,203,224,.14));}
+    .medalBox.on{background:linear-gradient(150deg,#3a3011,#4a3c12);}
+    .tier.summit .tn{color:#83DAEE;}
   }
 </style>
 </head>
@@ -974,46 +1058,71 @@ function tapAvi(w){
 /* ================= 馴鷹祕笈（規則書） ================= */
 function renderManual(){
   setHeader();
-  const ri=rankIdx(db.stats.xp);
-  const stages=[
-    ['🥚','蛋','新單字剛加入鳥園','馬上就會考你'],
-    ['🐣','孵化','答對 1 次','休息 1 天再考'],
-    ['🐤','雛鳥','再答對 1 次','休息 2 天再考'],
-    ['🐦','小鳥','再答對 1 次','休息 4 天再考'],
-    ['🦜','成鳥','再答對 1 次','休息 8 天再考'],
-    ['🦅','雄鷹','再答對 1 次，畢業！','偶爾回來考考你']];
+  const ri=rankIdx(db.stats.xp), sh=db.stats.shields, last=RANKS.length-1;
+  const evoRows=STAGE.map((em,i)=>{
+    const pill=i===0?'剛來的新字 · 馬上考':i===5?'畢業，起飛！':'睡 '+INTERVALS[i]+' 天再考';
+    return `<div class="evoRow${i===5?' eagle':''}"><div class="evoDot">${em}</div><span class="evoName">${STAGE_NAME[i]}</span><span class="evoPill">${pill}</span></div>`;
+  }).join('');
+  const earn=[['第一次就答對','+10 ⭐'],['再挑戰時答對','+5 ⭐'],['⚡ 拼字秒殺（又快又準）','+2 ⭐'],['🎙️ 挑戰造句','+5 ⭐'],['🦅 雄鷹句子任務','+5 ⭐']]
+    .map(e=>`<div class="earn"><span>${e[0]}</span><b>${e[1]}</b></div>`).join('');
+  const tiers=RANKS.map((r,i)=>{
+    const st=i<ri?'✅':i===ri?'👑':(i===last?'🏔️':'🔒');
+    const cls='tier'+(i<ri?' done':'')+(i===ri?' here':'')+((i===last&&i>ri)?' summit':'');
+    const here=i===ri?'<span class="youAre">你在這裡</span>':'';
+    return `<div class="${cls}"><span class="st">${st}</span><span class="lv">LV.${i+1}</span><span class="tn">${esc(r[1])}${here}</span><span class="req">${r[0]} ⭐</span></div>`;
+  }).join('');
+  const medals=[0,1,2,3,4].map(i=>i<sh?'<div class="medalBox on">🎖️</div>':'<div class="medalBox off">🔘</div>').join('');
+  const inCyc=effStreak()%MEDAL_EVERY, toNext=inCyc===0?MEDAL_EVERY:MEDAL_EVERY-inCyc;
+  const medalNote=sh>=MEDAL_MAX?'勳章存滿 5 枚，你超猛！':`目前存了 ${sh} 枚 · 再連 ${toNext} 天就有第 ${sh+1} 枚`;
   el('view').innerHTML=`
-    <h2>📜 馴鷹祕笈</h2>
-    <p class="muted" style="margin-bottom:12px">馴鷹師的全部規則都在這裡。看懂祕笈，升級更快！</p>
-    <div class="card">
-      <h2>🐣 鳥兒的進化之路</h2>
-      ${stages.map(s=>`<div class="prow"><span style="font-size:17px">${s[0]} <b>${s[1]}</b></span><span style="text-align:right;color:var(--ink2);font-size:13px;font-weight:700">${s[2]}<br>${s[3]}</span></div>`).join('')}
-      <p class="muted" style="margin-top:8px">升級只算「休息完再考」的那一次答對——記憶要過夜才算數！有些任務比較簡單的字，到 🦜 成鳥就直接變雄鷹。</p>
+    <div class="mCover">
+      <div class="em">📜</div>
+      <div class="ttl">馴鷹祕笈</div>
+      <div class="sub">成為蒼穹鷹王的路，全寫在這裡。</div>
     </div>
-    <div class="card mt">
-      <h2>😅 答錯了會怎樣？</h2>
-      <p class="ex" style="text-align:left">鳥兒退一級（最多退到 🐣，不會變回蛋），今天會再考你一次，直到你答對為止。</p>
-      <p class="ex" style="text-align:left;margin-top:6px">放心——⭐ 星星永遠不會被扣，👑 稱號永遠不會掉級！</p>
-    </div>
-    <div class="card mt">
-      <h2>⭐ 星星怎麼賺</h2>
-      <div class="prow"><span>第一次就答對</span><b>+10 ⭐</b></div>
-      <div class="prow"><span>再挑戰時答對</span><b>+5 ⭐</b></div>
-      <div class="prow"><span>⚡ 拼字秒殺（一次拼對、超快完成）</span><b>再 +2 ⭐</b></div>
-      <div class="prow"><span>🎙️ 用這個字說一句話（挑戰）</span><b>+5 ⭐</b></div>
-      <div class="prow"><span>🦅 雄鷹句子任務（跟讀完成就好）</span><b>+5 ⭐</b></div>
-    </div>
-    <div class="card mt">
-      <h2>🎖️ 鷹芒勳章</h2>
-      <p class="ex" style="text-align:left">每連續練 5 天，得到 1 枚（最多存 5 枚）。哪天忘了練，勳章會自動替你飛一天，保住 🔥 連續紀錄！</p>
-    </div>
-    <div class="card mt">
-      <h2>👑 馴鷹師天梯</h2>
-      ${RANKS.map((r,i)=>`<div class="prow"><span>${i<ri?'✅':i===ri?'👑':'🔒'} LV.${i+1} <b>${r[1]}</b></span><b>${r[0]} ⭐${i===ri?'　⬅ 你在這裡':''}</b></div>`).join('')}
-    </div>
-    <div class="card mt">
-      <h2>⚡ 鳥園裡的閃電</h2>
-      <p class="ex" style="text-align:left">鳥園裡帶 ⚡ 的鳥＝今天練習答對就會進化，快去收下牠們！</p>
+    <div class="divider"><span class="f">🪶</span></div>
+
+    <section class="vol">
+      <div class="volHead"><div class="seal">I</div><div><div class="eyebrow">卷一</div><div class="vt">鷹兒成長之路</div></div></div>
+      <p class="lede">答對一次升一級，升級後睡幾天再考——<span class="hl">睡眠是記憶固著劑</span>，睡飽才記得牢。</p>
+      <div class="evoLadder">${evoRows}</div>
+      <p class="note"><span class="f">🪶</span>任務簡單的字，到成鳥就可以飛囉。</p>
+    </section>
+
+    <section class="vol">
+      <div class="volHead"><div class="seal">II</div><div><div class="eyebrow">卷二</div><div class="vt">答錯了？別擔心</div></div></div>
+      <p class="lede">連雄鷹都可能忘了怎麼飛，再練練就好。</p>
+      <p class="say">答錯的鳥退一級（最多退到 🐣），今天再考一次，答對就好。雄鷹偶爾也會被抽考——畢竟王者也要練習。</p>
+      <div class="promise">⭐ 星星不扣，👑 稱號不掉。<br>你的努力付出，鳥兒都記得。</div>
+    </section>
+
+    <section class="vol">
+      <div class="volHead"><div class="seal">III</div><div><div class="eyebrow">卷三</div><div class="vt">星星與天梯</div></div></div>
+      <p class="lede">讓星星引領著你，從新手一路登上蒼穹。</p>
+      <div class="sublabel">⭐ 星星怎麼賺</div>
+      ${earn}
+      <div class="sublabel" style="margin-top:16px">👑 馴鷹師天梯</div>
+      <div class="ladder">${tiers}</div>
+    </section>
+
+    <section class="vol">
+      <div class="volHead"><div class="seal">IV</div><div><div class="eyebrow">卷四</div><div class="vt">鷹芒勳章</div></div></div>
+      <p class="lede">你休息的那天，它替你 hold 住 🎖️</p>
+      <p class="say">連續練 5 天得 1 枚，最多存 5 枚。哪天忘了練，勳章會自動守護，保住你的紀錄 🔥。</p>
+      <div class="medalRow">${medals}</div>
+      <p class="note">${medalNote}</p>
+    </section>
+
+    <section class="vol">
+      <div class="volHead"><div class="seal">V</div><div><div class="eyebrow">卷五</div><div class="vt">出發前小提醒</div></div></div>
+      <p class="say">帶 <b style="color:var(--gold-d)">⚡</b> 的鳥＝今天答對就會進化。開練前巡一圈鳥園，看今天誰準備起飛！</p>
+    </section>
+
+    <div class="divider"><span class="f">🪶</span></div>
+
+    <div class="sendoff">
+      <span class="bird">🦅</span>
+      <div class="line">去吧，馴鷹師～～<br>浩瀚無垠的天空正等著你！</div>
     </div>`;
 }
 
