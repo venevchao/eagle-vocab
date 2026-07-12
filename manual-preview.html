@@ -62,11 +62,13 @@
        padding:18px 18px 20px;box-shadow:0 3px 0 rgba(28,58,94,.06);margin-top:16px;}
   .volHead{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
   .seal{width:46px;height:46px;flex:none;border-radius:14px;background:var(--seal);
-        display:grid;place-items:center;color:#fff;font-weight:800;font-size:21px;
+        display:grid;place-items:center;color:#fff;font-weight:700;font-size:19px;letter-spacing:1px;
+        font-family:"Copperplate","Copperplate Gothic Light","Trajan Pro",Georgia,serif;
+        text-shadow:0 1px 1px rgba(140,90,10,.5);
         box-shadow:0 3px 8px rgba(214,148,0,.4),inset 0 0 0 2px rgba(255,255,255,.35);}
   .eyebrow{font-size:12px;font-weight:800;letter-spacing:3px;color:var(--gold-d);}
   .vt{font-size:20px;font-weight:800;line-height:1.2;}
-  .lede{font-size:17px;font-weight:800;line-height:1.6;color:var(--ink);margin-bottom:14px;}
+  .lede{font-size:17px;font-weight:800;line-height:1.6;color:var(--ink2);margin-bottom:14px;}
   .hl{background:linear-gradient(transparent 58%,rgba(245,179,1,.42) 58%);padding:0 2px;border-radius:2px;}
 
   /* 進化梯 */
@@ -84,6 +86,7 @@
   .evoRow.eagle .evoName{color:var(--gold-d);}
   .evoRow.eagle .evoPill{background:var(--seal);color:#fff;}
   .note{color:var(--ink2);font-size:13px;font-weight:700;margin-top:6px;text-align:center;}
+  .note .fb{color:var(--gold-d);margin-right:4px;}
 
   /* 一般說明段 */
   .say{font-size:16px;font-weight:600;line-height:1.75;color:var(--ink);}
@@ -92,8 +95,8 @@
            font-weight:800;font-size:16px;line-height:1.6;text-align:center;}
 
   /* 星星價目 */
-  .sublabel{font-size:13px;font-weight:800;letter-spacing:1px;color:var(--ink2);
-            margin:4px 0 8px;display:flex;align-items:center;gap:6px;}
+  .sublabel{font-size:15px;font-weight:800;letter-spacing:.5px;color:var(--ink);
+            margin:6px 0 9px;display:flex;align-items:center;gap:6px;}
   .earn{display:flex;justify-content:space-between;align-items:center;padding:8px 0;
         border-bottom:1px dashed var(--line);font-size:15px;font-weight:600;}
   .earn:last-child{border-bottom:none;}
@@ -117,8 +120,8 @@
   .tier.here .tn{color:var(--gold-d);}
   .tier.here .youAre{margin-left:6px;font-size:11px;font-weight:800;color:#fff;
              background:var(--gold-d);padding:2px 7px;border-radius:999px;vertical-align:middle;}
-  .tier.summit{background:linear-gradient(90deg,rgba(29,134,166,.16),rgba(245,179,1,.16));}
-  .tier.summit .tn{color:var(--teal);}
+  .tier.summit{background:linear-gradient(90deg,rgba(245,179,1,.24),rgba(29,134,166,.13));}
+  .tier.summit .tn{color:#0A6F92;}
   .tier.summit .st{filter:drop-shadow(0 0 3px rgba(245,179,1,.8));}
 
   /* 勳章格 */
@@ -129,11 +132,14 @@
   .slot.off{opacity:.5;}
 
   /* 送行 */
-  .sendoff{margin-top:18px;text-align:center;padding:24px 18px;border-radius:var(--r);color:#fff;
-           background:linear-gradient(135deg,var(--sun),var(--gold));
-           box-shadow:0 8px 22px rgba(214,148,0,.4);}
-  .sendoff .bird{font-size:44px;display:block;margin-bottom:8px;animation:soar 3.5s ease-in-out infinite;}
-  .sendoff .line{font-size:20px;font-weight:800;line-height:1.5;letter-spacing:.5px;}
+  .sendoff{margin-top:16px;text-align:center;padding:26px 20px;border-radius:var(--r);color:#FFF4DE;
+           background:linear-gradient(135deg,#3D2814 0%,#7A4E24 36%,#B98A44 68%,#E7C67E 100%);
+           border:2px solid rgba(255,224,150,.5);
+           box-shadow:0 10px 26px rgba(60,38,16,.5),inset 0 0 0 1px rgba(120,74,30,.45),inset 0 2px 3px rgba(255,240,205,.35);}
+  .sendoff .bird{font-size:44px;display:block;margin-bottom:8px;animation:soar 3.5s ease-in-out infinite;
+                 filter:drop-shadow(0 2px 3px rgba(40,24,8,.55));}
+  .sendoff .line{font-size:20px;font-weight:800;line-height:1.5;letter-spacing:.5px;
+                 text-shadow:0 1px 2px rgba(50,30,10,.55);}
   @keyframes soar{0%,100%{transform:translateY(0) rotate(-4deg);}50%{transform:translateY(-9px) rotate(4deg);}}
   @media (prefers-reduced-motion:reduce){.sendoff .bird{animation:none;}}
 
@@ -150,6 +156,7 @@
     .hl{background:linear-gradient(transparent 58%,rgba(255,197,61,.32) 58%);}
     .slot.on{background:linear-gradient(150deg,#3a3011,#4a3c12);}
     .promise{background:linear-gradient(135deg,rgba(69,200,126,.16),rgba(107,203,224,.14));}
+    .tier.summit .tn{color:#83DAEE;}
   }
 </style>
 </head>
@@ -175,7 +182,7 @@
     <!-- 卷一 -->
     <section class="vol">
       <div class="volHead">
-        <div class="seal">一</div>
+        <div class="seal">I</div>
         <div><div class="eyebrow">卷一</div><div class="vt">鷹兒成長之路</div></div>
       </div>
       <p class="lede">答對一次升一級，升級後睡幾天再考——<span class="hl">睡眠是記憶固著劑</span>，睡飽才記得牢。</p>
@@ -187,13 +194,13 @@
         <div class="evoRow"><div class="evoDot">🦜</div><span class="evoName">成鳥</span><span class="evoPill">睡 8 天再考</span></div>
         <div class="evoRow eagle"><div class="evoDot">🦅</div><span class="evoName">雄鷹</span><span class="evoPill">畢業，起飛！</span></div>
       </div>
-      <p class="note">任務簡單的字，到成鳥就可以飛囉。</p>
+      <p class="note"><span class="fb">🪶</span>任務簡單的字，到成鳥就可以飛囉。</p>
     </section>
 
     <!-- 卷二 -->
     <section class="vol">
       <div class="volHead">
-        <div class="seal">二</div>
+        <div class="seal">II</div>
         <div><div class="eyebrow">卷二</div><div class="vt">答錯了？別擔心</div></div>
       </div>
       <p class="lede">連雄鷹都可能忘了怎麼飛，再練練就好。</p>
@@ -204,7 +211,7 @@
     <!-- 卷三 -->
     <section class="vol">
       <div class="volHead">
-        <div class="seal">三</div>
+        <div class="seal">III</div>
         <div><div class="eyebrow">卷三</div><div class="vt">星星與天梯</div></div>
       </div>
       <p class="lede">讓星星引領著你，從新手一路登上蒼穹。</p>
@@ -234,11 +241,11 @@
     <!-- 卷四 -->
     <section class="vol">
       <div class="volHead">
-        <div class="seal">四</div>
+        <div class="seal">IV</div>
         <div><div class="eyebrow">卷四</div><div class="vt">鷹芒勳章</div></div>
       </div>
       <p class="lede">你休息的那天，它替你 hold 住 🎖️</p>
-      <p class="say">連續練 5 天得 1 枚，最多存 5 枚。哪天忘了練，勳章會自動出列，保住你的紀錄 🔥。</p>
+      <p class="say">連續練 5 天得 1 枚，最多存 5 枚。哪天忘了練，勳章會自動守護，保住你的紀錄 🔥。</p>
       <div class="slots">
         <div class="slot on">🎖️</div>
         <div class="slot off">🔘</div>
@@ -252,11 +259,13 @@
     <!-- 卷五 -->
     <section class="vol">
       <div class="volHead">
-        <div class="seal">五</div>
+        <div class="seal">V</div>
         <div><div class="eyebrow">卷五</div><div class="vt">出發前小提醒</div></div>
       </div>
       <p class="say">帶 <b style="color:var(--gold-d)">⚡</b> 的鳥＝今天答對就會進化。開練前巡一圈鳥園，看今天誰準備起飛！</p>
     </section>
+
+    <div class="divider"><span class="f">🪶</span></div>
 
     <!-- 送行 -->
     <div class="sendoff">
