@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#DDF0FE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1826" media="(prefers-color-scheme: dark)">
+<title>馴鷹祕笈 · 改版預覽</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  h1,h2,h3,p{margin:0;}
+  :root{
+    --sky:#EAF5FD; --card:#FFFFFF; --ink:#1C3A5E; --ink2:#5B7C9E;
+    --sun:#FFAB2E; --sun-d:#E89312; --grass:#3FBF77; --grass-d:#2E9C5E;
+    --coral:#FF7A70; --coral-d:#E05A50; --line:#CFE3F3; --chip:#DDEEFB;
+    --gold:#F5B301; --gold-d:#D99400; --teal:#1D86A6; --r:18px;
+    --seal:linear-gradient(150deg,#FFCE5A,#F5A814);
+  }
+  html,body{height:100%;}
+  body{
+    background:linear-gradient(180deg,#DDF0FE 0%, var(--sky) 40%, #F2FAF3 100%);
+    background-attachment:fixed; color:var(--ink);
+    font-family:"PingFang TC","Heiti TC","Microsoft JhengHei",-apple-system,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .en{font-family:ui-rounded,"SF Pro Rounded","Arial Rounded MT Bold",-apple-system,sans-serif;}
+  #app{max-width:680px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:0 16px;}
+
+  /* 預覽提示條 */
+  .pvbar{background:#4C36B8;color:#fff;text-align:center;font-weight:800;font-size:13px;
+         padding:6px 10px;border-radius:0 0 12px 12px;letter-spacing:.5px;}
+
+  /* App 外框 */
+  header{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:14px 2px 6px;}
+  header .logo{font-size:22px;font-weight:800;letter-spacing:1px;margin-right:auto;}
+  .hchip{background:var(--card);border:2px solid var(--line);border-radius:999px;
+         padding:5px 12px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:5px;
+         font-variant-numeric:tabular-nums;}
+  main{flex:1;padding:6px 0 96px;}
+  nav{position:fixed;bottom:0;left:0;right:0;z-index:20;background:rgba(255,255,255,.96);
+      border-top:2px solid var(--line);backdrop-filter:blur(6px);}
+  nav .wrap{max-width:680px;margin:0 auto;display:flex;}
+  nav button{flex:1;background:none;border:none;padding:10px 0 max(10px,env(safe-area-inset-bottom));
+      font-size:13px;font-weight:700;color:var(--ink2);cursor:pointer;font-family:inherit;}
+  nav button .ic{display:block;font-size:24px;margin-bottom:2px;filter:grayscale(.7);opacity:.75;}
+  nav button.on{color:var(--ink);}
+  nav button.on .ic{filter:none;opacity:1;}
+
+  /* 祕笈封面 */
+  .cover{text-align:center;padding:14px 0 6px;}
+  .cover .em{font-size:46px;line-height:1;filter:drop-shadow(0 3px 5px rgba(180,130,10,.35));}
+  .cover h1{font-size:29px;font-weight:800;letter-spacing:3px;margin-top:4px;}
+  .cover .sub{color:var(--ink2);font-weight:700;font-size:15px;margin-top:6px;}
+  .divider{display:flex;align-items:center;gap:10px;margin:16px 2px 4px;color:var(--gold-d);}
+  .divider::before,.divider::after{content:'';flex:1;height:2px;
+      background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .divider .f{font-size:15px;}
+
+  /* 卷 */
+  .vol{background:var(--card);border:2px solid var(--line);border-radius:var(--r);
+       padding:18px 18px 20px;box-shadow:0 3px 0 rgba(28,58,94,.06);margin-top:16px;}
+  .volHead{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .seal{width:46px;height:46px;flex:none;border-radius:14px;background:var(--seal);
+        display:grid;place-items:center;color:#fff;font-weight:800;font-size:21px;
+        box-shadow:0 3px 8px rgba(214,148,0,.4),inset 0 0 0 2px rgba(255,255,255,.35);}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:3px;color:var(--gold-d);}
+  .vt{font-size:20px;font-weight:800;line-height:1.2;}
+  .lede{font-size:17px;font-weight:800;line-height:1.6;color:var(--ink);margin-bottom:14px;}
+  .hl{background:linear-gradient(transparent 58%,rgba(245,179,1,.42) 58%);padding:0 2px;border-radius:2px;}
+
+  /* 進化梯 */
+  .evo{position:relative;margin:2px 0 8px;}
+  .evo::before{content:'';position:absolute;left:22px;top:26px;bottom:30px;width:3px;
+      background:linear-gradient(var(--line),var(--gold));border-radius:3px;z-index:0;}
+  .evoRow{display:flex;align-items:center;gap:13px;padding:6px 0;position:relative;z-index:1;}
+  .evoDot{width:46px;height:46px;flex:none;border-radius:50%;display:grid;place-items:center;
+          font-size:25px;background:var(--chip);border:2px solid var(--line);}
+  .evoName{font-weight:800;font-size:16px;}
+  .evoPill{margin-left:auto;background:var(--chip);color:var(--ink2);font-weight:700;
+           font-size:13px;padding:5px 13px;border-radius:999px;white-space:nowrap;}
+  .evoRow.eagle .evoDot{background:var(--seal);border-color:var(--gold);
+      box-shadow:0 0 0 5px rgba(245,179,1,.18);}
+  .evoRow.eagle .evoName{color:var(--gold-d);}
+  .evoRow.eagle .evoPill{background:var(--seal);color:#fff;}
+  .note{color:var(--ink2);font-size:13px;font-weight:700;margin-top:6px;text-align:center;}
+
+  /* 一般說明段 */
+  .say{font-size:16px;font-weight:600;line-height:1.75;color:var(--ink);}
+  .promise{margin-top:14px;background:linear-gradient(135deg,rgba(63,191,119,.14),rgba(29,134,166,.12));
+           border:2px solid rgba(63,191,119,.35);border-radius:14px;padding:13px 15px;
+           font-weight:800;font-size:16px;line-height:1.6;text-align:center;}
+
+  /* 星星價目 */
+  .sublabel{font-size:13px;font-weight:800;letter-spacing:1px;color:var(--ink2);
+            margin:4px 0 8px;display:flex;align-items:center;gap:6px;}
+  .earn{display:flex;justify-content:space-between;align-items:center;padding:8px 0;
+        border-bottom:1px dashed var(--line);font-size:15px;font-weight:600;}
+  .earn:last-child{border-bottom:none;}
+  .earn b{font-variant-numeric:tabular-nums;color:var(--gold-d);font-size:16px;white-space:nowrap;}
+
+  /* 馴鷹師天梯 */
+  .ladder{margin-top:8px;border-radius:14px;overflow:hidden;border:2px solid var(--line);
+          background:linear-gradient(180deg,transparent 55%,rgba(245,179,1,.10));}
+  .tier{display:flex;align-items:center;gap:10px;padding:10px 13px;border-bottom:1px solid var(--line);}
+  .tier:last-child{border-bottom:none;}
+  .tier .st{font-size:16px;width:20px;text-align:center;flex:none;}
+  .tier .lv{font-size:12px;font-weight:800;color:var(--ink2);font-variant-numeric:tabular-nums;
+            width:36px;flex:none;}
+  .tier .tn{font-weight:800;font-size:15px;}
+  .tier .req{margin-left:auto;font-size:12px;font-weight:700;color:var(--ink2);
+             font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .tier.done{opacity:.6;}
+  .tier.done .tn{font-weight:700;}
+  .tier.here{background:linear-gradient(90deg,rgba(245,179,1,.22),rgba(245,179,1,.06));
+             box-shadow:inset 3px 0 0 var(--gold);}
+  .tier.here .tn{color:var(--gold-d);}
+  .tier.here .youAre{margin-left:6px;font-size:11px;font-weight:800;color:#fff;
+             background:var(--gold-d);padding:2px 7px;border-radius:999px;vertical-align:middle;}
+  .tier.summit{background:linear-gradient(90deg,rgba(29,134,166,.16),rgba(245,179,1,.16));}
+  .tier.summit .tn{color:var(--teal);}
+  .tier.summit .st{filter:drop-shadow(0 0 3px rgba(245,179,1,.8));}
+
+  /* 勳章格 */
+  .slots{display:flex;gap:9px;justify-content:center;margin-top:12px;}
+  .slot{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:24px;
+        background:var(--chip);border:2px solid var(--line);}
+  .slot.on{background:linear-gradient(150deg,#FFF3D0,#FFE49E);border-color:var(--gold);}
+  .slot.off{opacity:.5;}
+
+  /* 送行 */
+  .sendoff{margin-top:18px;text-align:center;padding:24px 18px;border-radius:var(--r);color:#fff;
+           background:linear-gradient(135deg,var(--sun),var(--gold));
+           box-shadow:0 8px 22px rgba(214,148,0,.4);}
+  .sendoff .bird{font-size:44px;display:block;margin-bottom:8px;animation:soar 3.5s ease-in-out infinite;}
+  .sendoff .line{font-size:20px;font-weight:800;line-height:1.5;letter-spacing:.5px;}
+  @keyframes soar{0%,100%{transform:translateY(0) rotate(-4deg);}50%{transform:translateY(-9px) rotate(4deg);}}
+  @media (prefers-reduced-motion:reduce){.sendoff .bird{animation:none;}}
+
+  /* 夜間 */
+  @media (prefers-color-scheme:dark){
+    :root{
+      --sky:#0F1E2E; --card:#1A2B3E; --ink:#E9F1FA; --ink2:#9DB3CA;
+      --sun:#FFAB2E; --sun-d:#F0A93A; --grass:#45C87E; --grass-d:#59D68E;
+      --coral:#FF8A80; --coral-d:#D9645A; --line:#2C4155; --chip:#233850;
+      --gold:#FFC53D; --gold-d:#FFD46A; --teal:#6BCBE0;
+    }
+    body{background:linear-gradient(180deg,#0B1826 0%,#102132 45%,#12271F 100%);background-attachment:fixed;}
+    nav{background:rgba(13,23,36,.96);}
+    .hl{background:linear-gradient(transparent 58%,rgba(255,197,61,.32) 58%);}
+    .slot.on{background:linear-gradient(150deg,#3a3011,#4a3c12);}
+    .promise{background:linear-gradient(135deg,rgba(69,200,126,.16),rgba(107,203,224,.14));}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="pvbar">🔍 祕笈改版預覽 · 給媽媽過目（不影響正式 App）</div>
+  <header>
+    <span class="logo">🦅 養鷹達人</span>
+    <span class="hchip">🔥 7</span>
+    <span class="hchip">🎖️ 1</span>
+    <span class="hchip">⭐ 950</span>
+  </header>
+
+  <main>
+    <!-- 封面 -->
+    <div class="cover">
+      <div class="em">📜</div>
+      <h1>馴鷹祕笈</h1>
+      <p class="sub">成為蒼穹鷹王的路，全寫在這裡。</p>
+    </div>
+    <div class="divider"><span class="f">🪶</span></div>
+
+    <!-- 卷一 -->
+    <section class="vol">
+      <div class="volHead">
+        <div class="seal">一</div>
+        <div><div class="eyebrow">卷一</div><div class="vt">鷹兒成長之路</div></div>
+      </div>
+      <p class="lede">答對一次升一級，升級後睡幾天再考——<span class="hl">睡眠是記憶固著劑</span>，睡飽才記得牢。</p>
+      <div class="evo">
+        <div class="evoRow"><div class="evoDot">🥚</div><span class="evoName">蛋</span><span class="evoPill">剛來的新字 · 馬上考</span></div>
+        <div class="evoRow"><div class="evoDot">🐣</div><span class="evoName">孵化</span><span class="evoPill">睡 1 天再考</span></div>
+        <div class="evoRow"><div class="evoDot">🐤</div><span class="evoName">雛鳥</span><span class="evoPill">睡 2 天再考</span></div>
+        <div class="evoRow"><div class="evoDot">🐦</div><span class="evoName">小鳥</span><span class="evoPill">睡 4 天再考</span></div>
+        <div class="evoRow"><div class="evoDot">🦜</div><span class="evoName">成鳥</span><span class="evoPill">睡 8 天再考</span></div>
+        <div class="evoRow eagle"><div class="evoDot">🦅</div><span class="evoName">雄鷹</span><span class="evoPill">畢業，起飛！</span></div>
+      </div>
+      <p class="note">任務簡單的字，到成鳥就可以飛囉。</p>
+    </section>
+
+    <!-- 卷二 -->
+    <section class="vol">
+      <div class="volHead">
+        <div class="seal">二</div>
+        <div><div class="eyebrow">卷二</div><div class="vt">答錯了？別擔心</div></div>
+      </div>
+      <p class="lede">連雄鷹都可能忘了怎麼飛，再練練就好。</p>
+      <p class="say">答錯的鳥退一級（最多退到 🐣），今天再考一次，答對就好。雄鷹偶爾也會被抽考——畢竟王者也要練習。</p>
+      <div class="promise">⭐ 星星不扣，👑 稱號不掉。<br>你的努力付出，鳥兒都記得。</div>
+    </section>
+
+    <!-- 卷三 -->
+    <section class="vol">
+      <div class="volHead">
+        <div class="seal">三</div>
+        <div><div class="eyebrow">卷三</div><div class="vt">星星與天梯</div></div>
+      </div>
+      <p class="lede">讓星星引領著你，從新手一路登上蒼穹。</p>
+
+      <div class="sublabel">⭐ 星星怎麼賺</div>
+      <div class="earn"><span>第一次就答對</span><b>+10 ⭐</b></div>
+      <div class="earn"><span>再挑戰時答對</span><b>+5 ⭐</b></div>
+      <div class="earn"><span>⚡ 拼字秒殺（又快又準）</span><b>+2 ⭐</b></div>
+      <div class="earn"><span>🎙️ 挑戰造句</span><b>+5 ⭐</b></div>
+      <div class="earn"><span>🦅 雄鷹句子任務</span><b>+5 ⭐</b></div>
+
+      <div class="sublabel" style="margin-top:16px;">👑 馴鷹師天梯</div>
+      <div class="ladder">
+        <div class="tier done"><span class="st">✅</span><span class="lv">LV.1</span><span class="tn">鷹兒保育員</span><span class="req">0 ⭐</span></div>
+        <div class="tier done"><span class="st">✅</span><span class="lv">LV.2</span><span class="tn">見習馴鷹師</span><span class="req">300 ⭐</span></div>
+        <div class="tier here"><span class="st">👑</span><span class="lv">LV.3</span><span class="tn">鷹巢守護者<span class="youAre">你在這裡</span></span><span class="req">800 ⭐</span></div>
+        <div class="tier"><span class="st">🔒</span><span class="lv">LV.4</span><span class="tn">馭風馴鷹師</span><span class="req">1600 ⭐</span></div>
+        <div class="tier"><span class="st">🔒</span><span class="lv">LV.5</span><span class="tn">鷹語天才</span><span class="req">2800 ⭐</span></div>
+        <div class="tier"><span class="st">🔒</span><span class="lv">LV.6</span><span class="tn">御鷹騎士</span><span class="req">4500 ⭐</span></div>
+        <div class="tier"><span class="st">🔒</span><span class="lv">LV.7</span><span class="tn">巡弋獵鷹</span><span class="req">6500 ⭐</span></div>
+        <div class="tier"><span class="st">🔒</span><span class="lv">LV.8</span><span class="tn">鷹眼無雙</span><span class="req">9000 ⭐</span></div>
+        <div class="tier"><span class="st">🔒</span><span class="lv">LV.9</span><span class="tn">破空之翼</span><span class="req">12000 ⭐</span></div>
+        <div class="tier summit"><span class="st">🏔️</span><span class="lv">LV.10</span><span class="tn">蒼穹鷹王</span><span class="req">16000 ⭐</span></div>
+      </div>
+    </section>
+
+    <!-- 卷四 -->
+    <section class="vol">
+      <div class="volHead">
+        <div class="seal">四</div>
+        <div><div class="eyebrow">卷四</div><div class="vt">鷹芒勳章</div></div>
+      </div>
+      <p class="lede">你休息的那天，它替你 hold 住 🎖️</p>
+      <p class="say">連續練 5 天得 1 枚，最多存 5 枚。哪天忘了練，勳章會自動出列，保住你的紀錄 🔥。</p>
+      <div class="slots">
+        <div class="slot on">🎖️</div>
+        <div class="slot off">🔘</div>
+        <div class="slot off">🔘</div>
+        <div class="slot off">🔘</div>
+        <div class="slot off">🔘</div>
+      </div>
+      <p class="note">目前存了 1 枚 · 再連 3 天就有第 2 枚</p>
+    </section>
+
+    <!-- 卷五 -->
+    <section class="vol">
+      <div class="volHead">
+        <div class="seal">五</div>
+        <div><div class="eyebrow">卷五</div><div class="vt">出發前小提醒</div></div>
+      </div>
+      <p class="say">帶 <b style="color:var(--gold-d)">⚡</b> 的鳥＝今天答對就會進化。開練前巡一圈鳥園，看今天誰準備起飛！</p>
+    </section>
+
+    <!-- 送行 -->
+    <div class="sendoff">
+      <span class="bird">🦅</span>
+      <div class="line">去吧，馴鷹師～～<br>浩瀚無垠的天空正等著你！</div>
+    </div>
+  </main>
+
+  <nav><div class="wrap">
+    <button><span class="ic">🏠</span>今天</button>
+    <button><span class="ic">🐦</span>鳥園</button>
+    <button class="on"><span class="ic">📜</span>祕笈</button>
+    <button><span class="ic">⚙️</span>家長</button>
+  </div></nav>
+</div>
+</body>
+</html>
