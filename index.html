@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#0B1826" media="(prefers-color-scheme: dark)">
 <title>養鷹達人</title>
 <style>
-  *,*::before,*::after{box-sizing:border-box;}
+  *,*::before,*::after{box-sizing:border-box;touch-action:manipulation;}
   html,body{margin:0;padding:0;}
   h2,p{margin:0;}
   :root{
@@ -517,7 +517,15 @@ function effStreak(){const m=missDays();if(m===0)return db.stats.streak;return d
 /* ================= 音效（WebAudio 合成） ================= */
 let AC=null;
 function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}
-  if(AC&&AC.state==='suspended')AC.resume(); return AC;}
+  if(AC&&AC.state!=='running'){try{AC.resume();}catch(e){}} return AC;}
+/* iOS 音訊路由喚醒：播一小段近乎無聲的音檔，把音訊 session 推到播放狀態，
+   緩解「前幾題範例音檔無聲」與 WebAudio 被悶掉的問題（搭配觀察） */
+function audioKick(){
+  try{
+    const a=new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAAA=');
+    a.volume=0.05; a.play().catch(()=>{});
+  }catch(e){}
+}
 function tone(f,t0,dur,type,vol){const c=ac();if(!c||!db.sound)return;
   const o=c.createOscillator(),g=c.createGain();
   o.type=type||'sine';o.frequency.value=f;
@@ -570,7 +578,7 @@ function speak(text,rate,onend){
 }
 
 /* ================= 錄音（麥克風，全部可選、絕不擋路） ================= */
-let MIC_REC=null, MIC_CHUNKS=[], MIC_BLOCKED=false;
+let MIC_REC=null, MIC_CHUNKS=[], MIC_BLOCKED=false, MIC_DISCARD=false;
 const MIC_CLIPS={}, MIC_META={};
 function micSupported(){
   return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) && !MIC_BLOCKED;
@@ -601,12 +609,13 @@ async function micStart(id){
     MIC_CHUNKS=[];
     MIC_REC.ondataavailable=e=>{if(e.data&&e.data.size)MIC_CHUNKS.push(e.data);};
     MIC_REC.onstop=()=>{
-      const mt=MIC_REC.mimeType||'audio/webm';
-      const blob=new Blob(MIC_CHUNKS,{type:mt});
-      if(MIC_CLIPS[id]&&MIC_CLIPS[id].url)URL.revokeObjectURL(MIC_CLIPS[id].url);
-      MIC_CLIPS[id]={url:URL.createObjectURL(blob),recording:false};
       stream.getTracks().forEach(t=>t.stop());
       MIC_REC=null;
+      /* 換頁強制停止的錄音直接丟棄——不入庫、不渲染、不加分，杜絕跨卡幽靈音檔 */
+      if(MIC_DISCARD){MIC_DISCARD=false;delete MIC_CLIPS[id];return;}
+      const blob=new Blob(MIC_CHUNKS,{type:(MIC_CHUNKS[0]&&MIC_CHUNKS[0].type)||'audio/mp4'});
+      if(MIC_CLIPS[id]&&MIC_CLIPS[id].url)URL.revokeObjectURL(MIC_CLIPS[id].url);
+      MIC_CLIPS[id]={url:URL.createObjectURL(blob),recording:false};
       micRenderInto(id);
       const meta=MIC_META[id];
       if(meta&&meta.onDone)meta.onDone();
@@ -629,7 +638,7 @@ function micPlay(id){const c=MIC_CLIPS[id];if(!c||!c.url)return;
 function micHas(id){return !!(MIC_CLIPS[id]&&MIC_CLIPS[id].url);}
 function micClear(id){if(MIC_CLIPS[id]&&MIC_CLIPS[id].url)URL.revokeObjectURL(MIC_CLIPS[id].url);delete MIC_CLIPS[id];}
 function micHideAll(){document.querySelectorAll('.micRow').forEach(e=>e.classList.add('hid'));}
-function micForceStopIfActive(){if(MIC_REC&&MIC_REC.state==='recording'){try{MIC_REC.stop();}catch(e){}}}
+function micForceStopIfActive(){if(MIC_REC&&MIC_REC.state==='recording'){MIC_DISCARD=true;try{MIC_REC.stop();}catch(e){}}}
 function micResetAll(){Object.keys(MIC_CLIPS).forEach(micClear);}
 function micChallengeReward(x){
   if(!S)return;
@@ -676,7 +685,14 @@ function cardType(x){
 
 /* ================= 導覽 ================= */
 let VIEWN='home';
-function go(v){VIEWN=v;
+function go(v){
+  /* 練習進行中誤觸任何分頁（含底部導覽），先確認再離開；進度已隨答題即時保存 */
+  if(S&&S.i<S.q.length){
+    if(!confirm('要先休息嗎？進度已經記下來了！'))return;
+    micForceStopIfActive();micStopPlay();
+    serializeSession();S=null;
+  }
+  VIEWN=v;
   ['home','avi','man','par'].forEach(n=>el('nav-'+n).classList.toggle('on',n===v));
   if(v==='home')renderHome(); else if(v==='avi')renderAviary(); else if(v==='man')renderManual(); else renderParent();
   window.scrollTo(0,0);
@@ -716,23 +732,67 @@ function renderHome(){
       <div class="stat"><div class="n grow">🐤 ${learning}</div><div class="l">成長中</div></div>
       <div class="stat"><div class="n egg">🥚 ${eggs}</div><div class="l">等待孵化</div></div>
     </div>
-    <button class="btn big ${doneToday?'ghost':''}" onclick="startSession()">
-      ${doneToday?'自由練習一輪 💪':'開始今天的練習 ▶'}</button>
+    ${(()=>{const ps=peekSession();
+      if(ps)return `<button class="btn big" onclick="startSession()">繼續今天的練習 ▶（第 ${ps.at}/${ps.len} 題）</button>`;
+      return `<button class="btn big ${doneToday?'ghost':''}" onclick="startSession()">
+      ${doneToday?'自由練習一輪 💪':'開始今天的練習 ▶'}</button>`;})()}
     <p class="muted mt" style="text-align:center">
       ${dueN?('今天有 <b class="due">'+dueN+'</b> 隻鳥準備好進化！'):'今天沒有鳥等著進化，練了算加分！'}　🔥 連續 <b class="streak">${effStreak()}</b> 天${db.stats.best>effStreak()?'（最高 '+db.stats.best+' 天）':''}</p>`;
 }
 
 /* ================= 練習 Session ================= */
 let S=null;
+
+/* 場次斷點續練：每答一題就把佇列快照存進 localStorage，
+   誤觸分頁、重新整理、關掉 Safari 都能從原題續練（毀滅動力級干擾的解方） */
+function serializeSession(){
+  if(!S)return;
+  try{
+    localStorage.setItem(KEY+'-session',JSON.stringify({
+      d:today(),i:S.i,firstOk:S.firstOk,firstNg:S.firstNg,xp:S.xp,
+      freeplay:S.freeplay?1:0,rank0:S.rank0,evolved:S.evolved,
+      chal:S.chalGiven?[...S.chalGiven]:[],
+      q:S.q.map(it=>({w:it.x.w,type:it.type==='echo'?'echoCandidate':it.type,
+        tries:it.tries||0,bonus:it.bonus?1:0,followup:it.followup?1:0}))
+    }));
+  }catch(e){}
+}
+function clearSessionSave(){try{localStorage.removeItem(KEY+'-session');}catch(e){}}
+function peekSession(){
+  try{
+    const d=JSON.parse(localStorage.getItem(KEY+'-session')||'null');
+    if(!d||d.d!==today()||!d.q||d.i>=d.q.length)return null;
+    return {at:d.i+1,len:d.q.length};
+  }catch(e){return null;}
+}
+function restoreSession(){
+  try{
+    const d=JSON.parse(localStorage.getItem(KEY+'-session')||'null');
+    if(!d||d.d!==today()||!d.q||d.i>=d.q.length)return null;
+    const map={}; allWords().forEach(x=>map[x.w.toLowerCase()]=x);
+    const q=[];
+    for(const it of d.q){
+      const x=map[it.w.toLowerCase()]; if(!x)return null;
+      q.push({x,type:it.type,tries:it.tries,bonus:it.bonus?1:0,followup:it.followup});
+    }
+    return {q,i:d.i,total:q.length,firstOk:d.firstOk,firstNg:d.firstNg,xp:d.xp,
+      evolved:d.evolved||[],newBadges:[],rank0:d.rank0,freeplay:!!d.freeplay,
+      chalGiven:new Set(d.chal||[])};
+  }catch(e){return null;}
+}
 function startSession(){
-  ac(); sfx.tap();
+  ac(); sfx.tap(); audioKick();
   /* iOS Safari：TTS 需在使用者手勢中先解鎖一次，之後才能自動發音 */
   if(window.speechSynthesis){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}
+  /* 有今日未完成的場次快照就續練，不重建佇列 */
+  const saved=restoreSession();
+  if(saved){S=saved;renderCard();return;}
   const q=buildQueue();
   if(!q.length){el('view').innerHTML='<div class="card"><h2>沒有可以練的字！</h2><p class="muted">請家長先在「家長」頁新增單字。</p></div>';return;}
   /* 當日已達標後的加練＝自由練習：鳥兒等級照算，星星不計（與家長口頭規則一致，也是天梯速度的閥門） */
   const doneToday=!!(db.stats.days[today()]&&db.stats.days[today()].goal);
   S={q,i:0,total:q.length,firstOk:0,firstNg:0,xp:0,evolved:[],newBadges:[],rank0:rankIdx(db.stats.xp),freeplay:doneToday};
+  serializeSession();
   renderCard();
 }
 function renderCard(){
@@ -759,8 +819,7 @@ function renderCard(){
   if(item.type==='echo')setTimeout(()=>speak(x.s,0.9),350);
 }
 function quitSession(){
-  micForceStopIfActive();
-  if(confirm('要先休息嗎？進度已經記下來了！')){micResetAll();S=null;go('home');}
+  go('home');   /* go() 內建的場次守衛會負責確認與保存 */
 }
 
 /* ---- 卡片：新字介紹 ---- */
@@ -775,7 +834,7 @@ function introCard(x){
 }
 function introDone(){
   const x=S.q[S.i].x, p=prog(x.w);
-  p.intro=1; save(); sfx.ok(); S.i++; renderCard();
+  p.intro=1; save(); sfx.ok(); S.i++; serializeSession(); renderCard();
 }
 
 /* ---- 卡片：聽音選字 ---- */
@@ -872,6 +931,7 @@ function sayCard(x){
 function revealSay(){
   /* 拍二：整頁重繪——標準音自動播放，趁回聲記憶還熱立刻自評（只評字，不離場）；
      若拍一有錄單字，顯示唯一一組 ECHO 比對；拍一的錄音按鈕不再殘留 */
+  micForceStopIfActive();   /* 錄到一半就換頁：直接丟棄，不留幽靈音檔 */
   const x=S.q[S.i].x;
   speak(x.w);
   const hasRec=micHas('w');
@@ -924,7 +984,8 @@ function echoCard(x){
     </div>`;
 }
 function echoDone(){
-  addXp(5); sfx.ok();
+  micForceStopIfActive();
+  addXp(5); sfx.ok(); serializeSession();
   const fb=el('fb');
   fb.classList.add('ok');
   fb.innerHTML=`<div class="msg">🦅 句子飛起來了！</div>
@@ -956,6 +1017,7 @@ function answer(ok){
     }else if(item.tries<2){S.q.push({x,type:item.type,tries:item.tries+1});}
   }
   save();
+  serializeSession();
   if(item.type==='say'&&x.s)sentenceBeat(ok,x);
   else showFeedback(ok,x,first,item.type);
 }
@@ -983,11 +1045,11 @@ function showFeedback(ok,x,first,type){
   if(!ok)speak(x.w);
   const nb=fb.querySelector('.btn'); if(nb)nb.focus();
 }
-function nextCard(){micForceStopIfActive();micStopPlay();sfx.tap();S.i++;renderCard();}
+function nextCard(){micForceStopIfActive();micStopPlay();sfx.tap();S.i++;serializeSession();renderCard();}
 
 /* ---- Session 結束 ---- */
 function finishSession(){
-  micForceStopIfActive(); micResetAll();
+  micForceStopIfActive(); micStopPlay(); micResetAll(); clearSessionSave();
   const t=today(), st=db.stats;
   const rec=st.days[t]||{ok:0,ng:0,n:0,goal:false};
   rec.ok+=S.firstOk; rec.ng+=S.firstNg; rec.n+=S.firstOk+S.firstNg;
@@ -1026,7 +1088,8 @@ function finishSession(){
       ${medalEarned?`<div class="badgePop">${MEDAL} 連續 ${db.stats.streak} 天！獲得一枚${MEDAL_NAME}（目前 ${db.stats.shields} 枚）</div>`:''}
       ${S.newBadges.map(b=>`<div class="badgePop">🏅 得到徽章：${esc(b)}</div>`).join('')}
       <p style="font-weight:800;font-size:18px" class="mt">🔥 連續 ${db.stats.streak} 天！明天也要來喔！</p>
-      <button class="btn big mt" onclick="S=null;go('home')">回鳥園 🏠</button>
+      <button class="btn big mt" onclick="S=null;go('avi')">去鳥園看看 🐦</button>
+      <button class="btn ghost big mt" onclick="S=null;go('home')">回首頁 🏠</button>
     </div>`;
   sfx.win();
   if(!reduceMotion())confetti();
@@ -1258,9 +1321,10 @@ function renderParent(){
 
     <div class="card mt">
       <h2>🔧 語音診斷</h2>
-      <p class="muted" style="margin-bottom:8px">若遇到「範例音檔沒聲音」：先按「測試發音」，再按「顯示紀錄」，把內容複製或截圖給 Claude。</p>
+      <p class="muted" style="margin-bottom:8px">若遇到無聲：①先檢查控制中心的靜音 🔕 與媒體音量（音效受靜音鍵管、語音不受，兩者症狀不同）②按「測試發音」「測試音效」分開檢查 ③按「顯示紀錄」把內容複製或截圖給 Claude。</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn ghost sm" onclick="ttsTest()">🔊 測試發音</button>
+        <button class="btn ghost sm" onclick="ac();audioKick();sfx.win()">🎵 測試音效</button>
         <button class="btn ghost sm" onclick="ttsShow()">顯示語音紀錄</button>
       </div>
       <textarea id="ttsBox" class="mt hid" readonly></textarea>
@@ -1271,7 +1335,8 @@ function ttsShow(){
   const b=el('ttsBox'); if(!b)return; b.classList.remove('hid');
   try{
     const a=JSON.parse(localStorage.getItem(TTSLOG_KEY)||'[]');
-    b.value=a.slice(-20).reverse().map(e=>`${e.t} ${e.ev} [voices:${e.v} paused:${e.p} speaking:${e.s}] ${e.txt}`).join('\n')||'（還沒有紀錄）';
+    b.value='音效引擎狀態：'+(AC?AC.state:'未啟動')+'\n'
+      +(a.slice(-20).reverse().map(e=>`${e.t} ${e.ev} [voices:${e.v} paused:${e.p} speaking:${e.s}] ${e.txt}`).join('\n')||'（還沒有紀錄）');
   }catch(e){b.value='讀取失敗';}
 }
 function importWords(){
@@ -1311,7 +1376,7 @@ function resetAll(){
 }
 
 /* ================= 啟動 ================= */
-document.addEventListener('touchstart',function once(){ac();document.removeEventListener('touchstart',once);},{passive:true});
+document.addEventListener('touchstart',function once(){ac();audioKick();document.removeEventListener('touchstart',once);},{passive:true});
 if(TEST){const tb=document.createElement('div');tb.className='testbar';
   tb.textContent='🧪 測試模式：資料完全獨立，不會影響正式紀錄';
   el('app').prepend(tb);}
