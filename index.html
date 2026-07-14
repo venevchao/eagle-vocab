@@ -443,7 +443,23 @@ const SEED = [
  ['should','應該','You should sleep now.',10],
  ['America','美國','America is a big country.',10],
  ['world','世界','The world is big.',10]
-].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'master',batch:'Fry 2nd 100 (List '+a[3]+')'}));
+].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'master',batch:'Fry 2nd 100 (List '+a[3]+')',known:1}));
+
+/* Fry's 3rd 100 — 2026-07-15 匯入 List 1，熟悉軌；未標 known → 新字從 Lv0 蛋階段進場 */
+const SEED2=[
+ ['high','高的','The eagle flies high in the sky.',1],
+ ['every','每個；每一','I feed my gecko every day.',1],
+ ['near','靠近；在…附近','The football flies near the goal.',1],
+ ['add','加；加上','I add tape to the paper to make a toy.',1],
+ ['food','食物','My gecko wants some food.',1],
+ ['between','在…之間','The football went between my feet.',1],
+ ['own','自己的','I made my own paper gun.',1],
+ ['below','在…下面','The bug is below the leaf.',1],
+ ['country','國家','My country is small but strong.',1],
+ ['plants','植物（複數）','Some bugs eat plants.',1]
+].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'familiar',batch:'Fry 3rd 100 (List '+a[3]+')'}));
+
+const SEED_ALL=SEED.concat(SEED2);
 
 /* 測試模式：網址加 ?test 即啟用，資料存到完全獨立的 key，與正式紀錄互不干擾 */
 const TEST=new URLSearchParams(location.search).has('test');
@@ -490,15 +506,15 @@ function save(){
 /* ================= 詞庫 ================= */
 function allWords(){
   const seen={}, out=[];
-  SEED.concat(db.custom).forEach(x=>{const k=x.w.toLowerCase(); if(!seen[k]){seen[k]=1;out.push(x);}});
+  SEED_ALL.concat(db.custom).forEach(x=>{const k=x.w.toLowerCase(); if(!seen[k]){seen[k]=1;out.push(x);}});
   return out;
 }
 function prog(w){
   const k=w.toLowerCase();
   if(!db.progress[k]){
-    const isSeed=SEED.some(s=>s.w.toLowerCase()===k);
-    /* 已學過的第一批：從 Lv1 起步、今天到期；新匯入的字：Lv0、待介紹 */
-    db.progress[k]=isSeed?{lv:1,due:today(),intro:1,ok:0,ng:0}:{lv:0,due:today(),intro:0,ok:0,ng:0};
+    const isKnown=SEED_ALL.some(s=>s.known&&s.w.toLowerCase()===k);
+    /* 已學過的批次（known:1）：從 Lv1 起步、今天到期；新匯入批次與自訂字：Lv0、蛋階段待介紹 */
+    db.progress[k]=isKnown?{lv:1,due:today(),intro:1,ok:0,ng:0}:{lv:0,due:today(),intro:0,ok:0,ng:0};
   }
   return db.progress[k];
 }
@@ -1318,7 +1334,7 @@ function renderParent(){
       <textarea id="impTxt" placeholder="例如：high, every, near, add, food..."></textarea>
       <div class="mt" style="display:flex;gap:10px;align-items:center">
         <select id="impTier" style="flex:1">
-          <option value="familiar">目標：熟悉（拼字＋口說）</option>
+          <option value="familiar">目標：熟悉（溫和起步→產出）</option>
           <option value="recognize">目標：認識（聽音辨識）</option>
           <option value="master">目標：熟用（完整產出）</option>
         </select>
