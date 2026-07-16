@@ -445,7 +445,7 @@ const SEED = [
  ['world','世界','The world is big.',10]
 ].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'master',batch:'Fry 2nd 100 (List '+a[3]+')',known:1}));
 
-/* Fry's 3rd 100 — 2026-07-15 匯入 List 1，熟悉軌；未標 known → 新字從 Lv0 蛋階段進場 */
+/* Fry's 3rd 100 — 熟悉軌；未標 known → 新字從 Lv0 蛋階段進場（List 1：7/15、List 2：7/16 匯入） */
 const SEED2=[
  ['high','高的','The eagle flies high in the sky.',1],
  ['every','每個；每一','I feed my gecko every day.',1],
@@ -456,7 +456,17 @@ const SEED2=[
  ['own','自己的','I made my own paper gun.',1],
  ['below','在…下面','The bug is below the leaf.',1],
  ['country','國家','My country is small but strong.',1],
- ['plants','植物（複數）','Some bugs eat plants.',1]
+ ['plants','植物（複數）','Some bugs eat plants.',1],
+ ['last','最後的；上一個','The last bird flies home.',2],
+ ['school','學校','I play football after school.',2],
+ ['father','爸爸；父親','My father plays football with me.',2],
+ ['keep','保持；保留','I keep my gecko safe.',2],
+ ['trees','樹（複數）','Bugs live in old trees.',2],
+ ['never','從不；從來沒有','I never give up.',2],
+ ['started','開始（過去式）','I just started football class.',2],
+ ['city','城市','Taipei is a big city.',2],
+ ['earth','地球；土地','The earth goes around the sun.',2],
+ ['eyes','眼睛（複數）','My gecko has beautiful eyes.',2]
 ].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'familiar',batch:'Fry 3rd 100 (List '+a[3]+')'}));
 
 const SEED_ALL=SEED.concat(SEED2);
