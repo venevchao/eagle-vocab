@@ -160,6 +160,8 @@
   .micBonus{color:var(--sun-d);}
   @keyframes micPulse{0%,100%{opacity:1}50%{opacity:.55}}
   .btn.micRec{animation:micPulse 1s ease-in-out infinite;}
+  @keyframes micPulsePrep{50%{opacity:.45}}
+  .micRec.micPrep{opacity:.75;animation:micPulsePrep 1s ease-in-out infinite;}
   .echoRow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:4px;}
 
   /* 鳥園 */
@@ -480,6 +482,7 @@ const STAGE=['🥚','🐣','🐤','🐦','🦜','🦅'];
 const STAGE_NAME=['蛋','孵化','雛鳥','小鳥','成鳥','雄鷹'];
 const TIER_ZH={master:'熟用',familiar:'熟悉',recognize:'認識'};
 const REVIEW_CAP=30, NEW_CAP=5, XP_HIT=10, XP_RETRY=5;
+const APP_VER='2026-07-17';   /* 除錯用版本標記，家長頁底部顯示 */
 /* 鷹芒勳章：連續 MEDAL_EVERY 天得 1 枚（上限 MEDAL_MAX），落練 1 天自動消耗 1 枚保住連續紀錄 */
 const MEDAL='🎖️', MEDAL_NAME='鷹芒勳章', MEDAL_EVERY=5, MEDAL_MAX=5;
 /* 馴鷹師等級：門檻依每日約 300–400 XP 設計，前快後慢，最高階約在暑假尾聲達成 */
@@ -605,6 +608,7 @@ function speak(text,rate,onend){
 
 /* ================= 錄音（麥克風，全部可選、絕不擋路） ================= */
 let MIC_REC=null, MIC_CHUNKS=[], MIC_BLOCKED=false, MIC_DISCARD=false;
+let MIC_STARTING=false, MIC_GEN=0, MIC_T0=0;
 const MIC_CLIPS={}, MIC_META={};
 function micSupported(){
   return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) && !MIC_BLOCKED;
@@ -613,6 +617,7 @@ function micSetup(id,box,label,bonus,onDone,playLabel){MIC_META[id]={box,label,b
 function micWidgetHTML(id){
   const m=MIC_META[id]||{label:'🎙️ 錄音',playLabel:'▶️ 聽我錄的'};
   const c=MIC_CLIPS[id];
+  if(c&&c.starting)return `<button class="btn coral sm micRec micPrep" disabled>🎙️ 準備中…</button>`;
   if(c&&c.recording)return `<button class="btn coral sm micRec" onclick="micStop('${id}')">⏺️ 錄音中…（按這裡停止）</button>`;
   if(c&&c.url)return `<div class="micDone">
       <button class="btn ghost sm" onclick="micPlay('${id}')">${m.playLabel}</button>
@@ -629,9 +634,20 @@ function micRenderInto(id){
   box.innerHTML=micWidgetHTML(id);
 }
 async function micStart(id){
-  if(MIC_REC)return;   /* 同時只能錄一個 */
+  if(MIC_REC||MIC_STARTING)return;   /* 同時只能錄一個；await 空窗也擋 */
+  MIC_STARTING=true;
+  /* await 之前先給即時回饋，讓孩子知道「有按到」 */
+  MIC_CLIPS[id]={starting:true,url:(MIC_CLIPS[id]&&MIC_CLIPS[id].url)||null};
+  micRenderInto(id);
+  const gen=MIC_GEN;
   try{
     const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    if(gen!==MIC_GEN){   /* 準備中換卡/換頁：作廢，不在死卡上開錄 */
+      stream.getTracks().forEach(t=>t.stop());
+      MIC_STARTING=false;
+      delete MIC_CLIPS[id];
+      return;
+    }
     const okType=t=>window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t);
     const mime=okType('audio/mp4')?'audio/mp4':okType('audio/webm')?'audio/webm':'';
     MIC_REC=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
@@ -649,10 +665,12 @@ async function micStart(id){
       const meta=MIC_META[id];
       if(meta&&meta.onDone)meta.onDone();
     };
-    MIC_CLIPS[id]={recording:true,url:(MIC_CLIPS[id]&&MIC_CLIPS[id].url)||null};
     MIC_REC.start();
+    MIC_T0=Date.now(); MIC_STARTING=false;
+    MIC_CLIPS[id]={recording:true,url:(MIC_CLIPS[id]&&MIC_CLIPS[id].url)||null};
     micRenderInto(id);
   }catch(e){
+    MIC_STARTING=false;
     /* 權限被拒／裝置無麥克風（如 iPad Chrome 系統層權限未開）：不永久封鎖，
        這一顆按鈕保留可重試、顯示提示，其他一切照常。只有真的沒有錄音 API 才整批隱藏，
        但那種情況 micSupported() 早在按鈕出現前就攔下了，此處只是防禦性保底。 */
@@ -666,7 +684,10 @@ async function micStart(id){
     }
   }
 }
-function micStop(id){if(MIC_REC&&MIC_REC.state==='recording')MIC_REC.stop();}
+function micStop(id){
+  if(Date.now()-MIC_T0<400)return;   /* 剛轉「錄音中」瞬間的排隊誤按不當停止 */
+  if(MIC_REC&&MIC_REC.state==='recording')MIC_REC.stop();
+}
 let MIC_AUDIO=null;
 function micStopPlay(){if(MIC_AUDIO){try{MIC_AUDIO.pause();}catch(e){}MIC_AUDIO=null;}}
 function micPlay(id){const c=MIC_CLIPS[id];if(!c||!c.url)return;
@@ -676,8 +697,8 @@ function micPlay(id){const c=MIC_CLIPS[id];if(!c||!c.url)return;
 function micHas(id){return !!(MIC_CLIPS[id]&&MIC_CLIPS[id].url);}
 function micClear(id){if(MIC_CLIPS[id]&&MIC_CLIPS[id].url)URL.revokeObjectURL(MIC_CLIPS[id].url);delete MIC_CLIPS[id];}
 function micHideAll(){document.querySelectorAll('.micRow').forEach(e=>e.classList.add('hid'));}
-function micForceStopIfActive(){if(MIC_REC&&MIC_REC.state==='recording'){MIC_DISCARD=true;try{MIC_REC.stop();}catch(e){}}}
-function micResetAll(){Object.keys(MIC_CLIPS).forEach(micClear);}
+function micForceStopIfActive(){MIC_GEN++;if(MIC_REC&&MIC_REC.state==='recording'){MIC_DISCARD=true;try{MIC_REC.stop();}catch(e){}}}
+function micResetAll(){MIC_GEN++;Object.keys(MIC_CLIPS).forEach(micClear);}
 function micChallengeReward(x){
   if(!S)return;
   if(!S.chalGiven)S.chalGiven=new Set();
@@ -727,9 +748,10 @@ function go(v){
   /* 練習進行中誤觸任何分頁（含底部導覽），先確認再離開；進度已隨答題即時保存 */
   if(S&&S.i<S.q.length){
     if(!confirm('要先休息嗎？進度已經記下來了！'))return;
-    micForceStopIfActive();micStopPlay();
     serializeSession();S=null;
   }
+  /* 無條件停止：自由飛行區等非場次頁面也可能有錄音在進行，離頁前一律清乾淨 */
+  micForceStopIfActive();micStopPlay();
   VIEWN=v;
   ['home','avi','man','par'].forEach(n=>el('nav-'+n).classList.toggle('on',n===v));
   if(v==='home')renderHome(); else if(v==='avi')renderAviary(); else if(v==='man')renderManual(); else renderParent();
@@ -1185,14 +1207,37 @@ function renderAviary(){
     ${bar}
     <p class="muted" style="margin-bottom:4px">點上面的階段可以只看那一區，再點一次回到全部。</p>
     ${secs||'<p class="muted mt">這一區還沒有鳥！</p>'}
-    <p class="muted mtl">⚡＝今天練習就有機會進化！點一隻鳥可以聽發音和例句。</p>`;
+    <p class="muted mtl">⚡＝今天練習就有機會進化！點一隻鳥可以聽發音，有例句的鳥還能自由跟讀。</p>`;
 }
 function tapAvi(w){
   ac();
   const x=allWords().find(o=>o.w===w); if(!x)return;
-  speak(x.w);
-  if(x.s)setTimeout(()=>speak(x.s,0.95),900);
-  sfx.tap();
+  if(x.s){sfx.tap();renderFreeFlight(w);return;}
+  speak(x.w); sfx.tap();
+}
+
+/* ================= 自由飛行區（P3 v0：鳥園跟讀，不計分不影響進度） ================= */
+function renderFreeFlight(w){
+  const x=allWords().find(o=>o.w===w); if(!x)return;
+  micClear('ff');
+  const micOn=micSupported();
+  if(micOn)micSetup('ff','micFFBox','🎙️ 跟著唸一次整句',null,null);
+  el('view').innerHTML=`
+    <div class="sesTop">
+      <button class="quit" onclick="go('avi')" aria-label="回鳥園">✕</button>
+      <span class="hchip">🕊️ 自由飛行區</span>
+    </div>
+    <div class="card stage">
+      <div class="prompt">${stageOf(x)} ${esc(x.w)} 要載句子飛了！</div>
+      <p class="ex mt">${esc(x.s)}</p>
+      <button class="speak" onclick="speak('${esc(x.s)}',0.9)">🔊</button>
+      ${micOn?`<div class="micRow" id="micFFBox">${micWidgetHTML('ff')}</div>`:''}
+      <div class="fb" style="padding-top:10px">
+        <p class="muted">想聽幾次、跟讀幾次都可以，不計分也不影響進度。</p>
+        <button class="btn big" onclick="go('avi')">🐦 回鳥園</button>
+      </div>
+    </div>`;
+  setTimeout(()=>speak(x.s,0.9),350);
 }
 
 /* ================= 馴鷹祕笈（規則書） ================= */
@@ -1375,7 +1420,9 @@ function renderParent(){
         <button class="btn ghost sm" onclick="ttsShow()">顯示語音紀錄</button>
       </div>
       <textarea id="ttsBox" class="mt hid" readonly></textarea>
-    </div>`;
+    </div>
+
+    <p class="muted" style="text-align:center;margin-top:16px">版本 ${APP_VER}</p>`;
 }
 function ttsTest(){speak('Hello! Testing one two three.');setTimeout(ttsShow,1500);}
 function ttsShow(){
