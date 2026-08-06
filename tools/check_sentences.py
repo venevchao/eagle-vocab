@@ -24,7 +24,7 @@ INDEX = ROOT / "index.html"
 # 依據：興趣清單（守宮/昆蟲、足球、摺紙手作、工作細胞）＋已核准獎勵名詞＋真人。
 EXTRA_KNOWN = {
     "gecko", "geckos", "football", "bird", "birds", "sun", "safe", "class",
-    "taipei", "mantis", "harper", "cells", "blood", "paper",
+    "taipei", "mantis", "harper", "cells", "blood", "paper", "feet",
     "eagle", "eagles", "sky", "bug", "bugs", "leaf", "ball", "goal",
     "park", "road", "rain", "team", "game", "games", "video", "pet",
     "box", "door", "tape", "toy", "cool", "sunday",
