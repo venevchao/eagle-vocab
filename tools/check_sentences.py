@@ -29,6 +29,7 @@ EXTRA_KNOWN = {
     "park", "road", "rain", "team", "game", "games", "video", "pet",
     "box", "door", "tape", "toy", "cool", "sunday",
     "dad", "mom", "please",
+    "cats", "apollo", "midnight", "japan",   # 2026-08-06：過世家貓名（Apollo/Midnight）、全家日本行——媽媽於 List 7–10 驗收時確認
 }
 
 # 刻意預習字：先以加壓字身分放進較早批次的例句曝露、之後才成為 SEED 目標字。
