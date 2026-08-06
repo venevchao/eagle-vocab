@@ -26,6 +26,7 @@
     --gold:#F5B301;
     --gold-d:#D99400;
     --seal:linear-gradient(150deg,#FFCE5A,#F5A814);
+    --bronze:linear-gradient(150deg,#D8B063,#8A6535);
     --teal:#1D86A6;       /* 中文語意強調色 */
     --r:18px;
   }
@@ -109,6 +110,18 @@
          border:2px solid var(--line);border-bottom-width:4px;border-radius:50%;
          width:56px;height:56px;cursor:pointer;}
   .speak:active{transform:translateY(2px);}
+  .drillBanner{display:inline-block;background:var(--seal);color:#fff;font-weight:800;font-size:13px;
+      padding:4px 13px;border-radius:999px;margin-bottom:6px;letter-spacing:.5px;
+      text-shadow:0 1px 1px rgba(140,90,10,.5);box-shadow:0 2px 6px rgba(214,148,0,.35);}
+  .chunkRow{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:8px;margin:8px 0;}
+  .chunkRow .chunk{padding:6px 11px;border-radius:12px;font-weight:800;font-size:23px;
+      font-family:ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;}
+  .chunkRow .chunkG{background:var(--seal);color:#fff;text-shadow:0 1px 1px rgba(140,90,10,.5);}
+  .chunkRow .chunkB{background:var(--bronze);color:#fff;text-shadow:0 1px 1px rgba(80,50,10,.5);}
+  .chunkRow .chunkDot{color:var(--ink2);font-weight:800;font-size:20px;align-self:center;}
+  .chunkRow .chunkGhost{background:var(--chip);display:inline-flex;gap:4px;padding:9px 10px;}
+  .chunkRow .chunkGhost i{width:12px;height:4px;border-radius:2px;background:var(--ink2);opacity:.5;display:inline-block;}
+  .drillDone{font-size:14px;font-weight:800;color:var(--gold-d);margin-bottom:4px;}
   .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .opt{font-family:inherit;background:var(--card);border:2px solid var(--line);border-bottom-width:4px;
        border-radius:16px;padding:18px 8px;font-size:26px;font-weight:800;color:var(--ink);
@@ -450,7 +463,7 @@ const SEED = [
  ['world','世界','The world is big.',10]
 ].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'master',batch:'Fry 2nd 100 (List '+a[3]+')',known:1}));
 
-/* Fry's 3rd 100 — 熟悉軌；未標 known → 新字從 Lv0 蛋階段進場（List 1：7/15、List 2：7/16、List 3–6：7/21 匯入） */
+/* Fry's 3rd 100 — 熟悉軌；未標 known → 新字從 Lv0 蛋階段進場（List 1：7/15、List 2：7/16、List 3–6：7/21、List 7–10：8/6 匯入） */
 const SEED2=[
  ['high','高的','The eagle flies high in the sky.',1],
  ['every','每個；每一','I feed my gecko every day.',1],
@@ -511,7 +524,47 @@ const SEED2=[
  ['miles','英里（複數）','The eagle flies for miles and miles.',6],
  ['night','夜晚','My gecko wakes up at night.',6],
  ['walked','走（過去式）','We walked to school in the rain.',6],
- ['white','白色的','White cells in my blood protect me.',6]
+ ['white','白色的','White cells in my blood protect me.',6],
+ ['sea','海','Big fish live in the sea.',7],
+ ['began','開始（過去式）','The game began after school.',7],
+ ['grow','生長；長大','Baby geckos grow very fast.',7],
+ ['took','拿；帶（過去式）','Dad took us to the football game.',7],
+ ['river','河','The river runs to the sea.',7],
+ ['four','四','Our team got four goals today.',7],
+ ['carry','攜帶；搬運','Ants can carry big things.',7],
+ ['state','州（美國的）','A state is part of a country.',7],
+ ['once','一次；曾經','I saw that movie once.',7],
+ ['book','書','I read a book about bugs.',7],
+ ['hear','聽見','I hear my katydid singing at night.',8],
+ ['stop','停止','Stop the car at the red light.',8],
+ ['without','沒有；不帶','I can\'t live without my mom.',8],
+ ['second','第二；秒','Our team got second place.',8],
+ ['later','之後；稍後','See you later at the park!',8],
+ ['miss','想念；錯過','I miss my old cats, Apollo and Midnight.',8],
+ ['idea','主意；想法','I have a good idea!',8],
+ ['enough','足夠的','My gecko has enough food now.',8],
+ ['eat','吃','Geckos eat bugs at night.',8],
+ ['face','臉','Wash your face before school.',8],
+ ['watch','看；注視','I watch cartoons on TV.',9],
+ ['far','遠的','How far can an eagle fly?',9],
+ ['Indians','印第安人（美洲原住民）','Indians lived in America long ago.',9],
+ ['really','真的；非常','I really want a new game.',9],
+ ['almost','幾乎','My bird is almost an eagle.',9],
+ ['let','讓','Let me show you my new toy.',9],
+ ['above','在…上方','The eagle flies above the trees.',9],
+ ['girl','女孩','The girl kicks the ball hard.',9],
+ ['sometimes','有時候','Sometimes I play games with Dad.',9],
+ ['mountains','山（複數）','Eagles live high in the mountains.',9],
+ ['cut','切；剪','Cut the paper to make a star.',10],
+ ['young','年輕的；幼小的','I am a young boy who loves bugs.',10],
+ ['talk','說話；談','We talk about football at lunch.',10],
+ ['soon','很快；不久','My bird will be an eagle soon.',10],
+ ['list','清單','Write a list of your words.',10],
+ ['song','歌','The bird sings a happy song.',10],
+ ['being','身為；存在','Being kind is very important.',10],
+ ['leave','離開','We leave for school at eight o\'clock.',10],
+ ['family','家人；家庭','My family went to Japan together.',10],
+ ['it\'s','它是（縮寫）','It\'s time to feed the gecko!',10]
 ].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'familiar',batch:'Fry 3rd 100 (List '+a[3]+')'}));
 
 const SEED_ALL=SEED.concat(SEED2);
@@ -539,7 +592,8 @@ const CHEERS=['今天也來練 10 分鐘吧！','你的小鳥們在等你！','�
 
 /* ================= 儲存 ================= */
 let db=load();
-function fresh(){return {progress:{},custom:[],mottos:[],stats:{xp:0,streak:0,best:0,shields:0,lastDay:'',days:{},badges:[],spellLog:[]},sound:true};}
+db.mottosPost=db.mottosPost||[];   /* 完成後池；相容沒有此欄位的舊備份 */
+function fresh(){return {progress:{},custom:[],mottos:[],mottosPost:[],stats:{xp:0,streak:0,best:0,shields:0,lastDay:'',days:{},badges:[],spellLog:[]},sound:true};}
 function load(){
   try{
     const raw=localStorage.getItem(KEY)||localStorage.getItem(BAK);
@@ -756,6 +810,20 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 function el(id){return document.getElementById(id);}
 function reduceMotion(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
 
+/* ================= P5 鷹眼特訓：頑固字切塊卡 ================= */
+/* 切塊用 · 分隔；未列入者一律 fallback 一般拼字卡。thought/through 刻意讓 -ought 成獨立塊＝順帶教家族型態 */
+const CHUNK_MAP={little:'lit·tle',letter:'let·ter',beginning:'be·gin·ning',answer:'an·swer',
+different:'dif·fer·ent',sentence:'sen·tence',another:'an·oth·er',started:'start·ed',
+thought:'th·ought',through:'thr·ough',school:'sch·ool',between:'be·tween',
+every:'ev·er·y',earth:'ear·th',often:'of·ten',under:'un·der',
+important:'im·por·tant',together:'to·geth·er',something:'some·thing',children:'chil·dren',
+picture:'pic·ture',mother:'moth·er',father:'fa·ther',again:'a·gain',around:'a·round',follow:'fol·low'};
+function isStubborn(w){
+  if(prog(w).ng<2)return false;
+  const k=w.toLowerCase(), t=today();
+  return (db.stats.spellLog||[]).some(e=>e.w===k&&e.ok===0&&dayDiff(e.d,t)<=10);
+}
+
 /* ================= 每日出題器 ================= */
 function buildQueue(){
   const words=allWords(), t=today();
@@ -765,7 +833,12 @@ function buildQueue(){
   /* 複習債多時自動少上新字（習慣優先於進度） */
   const newN=due.length>25?0:due.length>15?2:NEW_CAP;
   const fresh_=words.filter(x=>!prog(x.w).intro).slice(0,newN);
-  let q=shuffle(reviews.slice()).map(x=>({x,type:cardType(x),tries:0}));
+  /* 頑固字回鍋時升級成切塊特訓卡（每場至多 2 張），其餘照舊隨機分派卡型 */
+  let drillN=0;
+  let q=shuffle(reviews.slice()).map(x=>{
+    if(isStubborn(x.w)&&CHUNK_MAP[x.w.toLowerCase()]&&drillN<2){drillN++;return {x,type:'spell',tries:0,drill:1};}
+    return {x,type:cardType(x),tries:0};
+  });
   /* 已畢業的字：抽 2 個回鍋——有例句且麥克風可用時升級成句子回音卡，否則退回一般快問快答 */
   const grads=shuffle(words.filter(isGrad)).slice(0,2);
   grads.forEach(x=>q.splice(Math.floor(Math.random()*(q.length+1)),0,{x,type:'echoCandidate',tries:0,bonus:1}));
@@ -907,7 +980,8 @@ function renderCard(){
   let inner='';
   if(item.type==='intro')inner=introCard(x);
   else if(item.type==='choose')inner=chooseCard(x);
-  else if(item.type==='spell')inner=spellCard(x);
+  else if(item.type==='spell'&&item.drill&&!item.drillGo)inner=drillIntroCard(x);
+  else if(item.type==='spell')inner=spellCard(x,item.drill);
   else if(item.type==='echo')inner=echoCard(x);
   else inner=sayCard(x);
   el('view').innerHTML=`
@@ -961,21 +1035,37 @@ function pickOpt(btn){
     answer(false);}
 }
 
-/* ---- 卡片：聽音拼字 ---- */
+/* ---- 卡片：鷹眼特訓第一拍「看清楚」（頑固字切塊卡） ---- */
+function drillIntroCard(x){
+  const chunks=(CHUNK_MAP[x.w.toLowerCase()]||x.w).split('·');
+  return `<div class="drillBanner">⚡ 鷹眼特訓</div>
+    <div class="prompt">這隻鳥想學高難度飛行！</div>
+    <div class="chunkRow">${chunks.map((c,i)=>`<span class="chunk ${i%2?'chunkB':'chunkG'}">${esc(c)}</span>`).join('<span class="chunkDot">·</span>')}</div>
+    <div class="gloss">${esc(x.zh||'')}</div>
+    <button class="speak" onclick="speak('${esc(x.w)}');sfx.tap()">🔊</button>
+    <div class="fb"><button class="btn big" onclick="startDrill()">開始特訓 →</button></div>`;
+}
+function startDrill(){S.q[S.i].drillGo=1;sfx.tap();serializeSession();renderCard();}
+
+/* ---- 卡片：聽音拼字（drill=true 時為鷹眼特訓第二拍「拼出來」，上方多一排切塊骨架） ---- */
 let SP=null;
-function spellCard(x){
+function spellCard(x,drill){
   const letters=x.w.split('');
   const decoys='abcdefghijklmnopqrstuvwxyz'.split('').filter(c=>!x.w.toLowerCase().includes(c));
   const decoyN=x.w.length<6?2:3;   /* N<6 給 +2、N>=6 給 +3；N>9 不再加碼，見決策紀錄 */
   const tiles=shuffle(letters.concat(shuffle(decoys).slice(0,decoyN)));
-  SP={ans:[],tiles,t0:null,undo:0};   /* t0 於第一次按字母磚時才起算（排除聽音與思考時間） */
+  SP={ans:[],tiles,t0:null,undo:0};   /* t0 於第一次按字母磚時才起算（排除聽音與思考時間，特訓第一拍研究時間同樣不計入） */
   /* 長字（N>6）縮小格子與字級，讓拼字結果永遠排成單行，不會斷成兩行 */
   const n=letters.length;
   const slotw=n<=6?44:n<=8?36:n<=10?30:24;
   const slotf=n<=6?32:n<=8?26:n<=10?22:18;
   const slotgap=n<=6?7:4;
+  /* 骨架只有塊框與字母數空格，不顯示字母——看塊拼、不是抄寫 */
+  const ghost=drill?`<div class="chunkRow">${(CHUNK_MAP[x.w.toLowerCase()]||'').split('·')
+    .map(c=>`<span class="chunk chunkGhost">${Array(c.length).fill('<i></i>').join('')}</span>`).join('')}</div>`:'';
   return `<div class="prompt">👂 聽一聽，拼出這個字！</div>
     <button class="speak" onclick="speak('${esc(x.w)}');sfx.tap()">🔊</button>
+    ${ghost}
     <div class="gloss">${esc(x.zh||'')}</div>
     <div class="slots" id="slots" style="--slotw:${slotw}px;--slotf:${slotf}px;--slotgap:${slotgap}px">${letters.map(()=>'<div class="slot"></div>').join('')}</div>
     <div class="tiles" id="tiles">${tiles.map((c,i)=>`<button class="tile" id="t${i}" onclick="tapTile(${i})">${esc(c.toLowerCase())}</button>`).join('')}</div>
@@ -1123,14 +1213,14 @@ function answer(ok){
   save();
   serializeSession();
   if(item.type==='say'&&x.s)sentenceBeat(ok,x);
-  else showFeedback(ok,x,first,item.type);
+  else showFeedback(ok,x,first,item.type,!!item.drill);
 }
 function addXp(n){
   if(S&&S.freeplay)return;   /* 自由練習不計星星 */
   db.stats.xp+=n;S.xp+=n;setHeader();
   const f=document.createElement('div');f.className='xpfloat';f.textContent='+'+n+' ⭐';
   document.body.appendChild(f);setTimeout(()=>f.remove(),1000);}
-function showFeedback(ok,x,first,type){
+function showFeedback(ok,x,first,type,drill){
   const fb=el('fb')||document.querySelector('.fb');
   const msgs=ok?['太棒了！','答對了！','好厲害！','就是這個！']:['沒關係，再看一次！','記下來，等等再挑戰！'];
   const fluent=ok&&S.q[S.i]&&S.q[S.i].fluent;
@@ -1139,6 +1229,7 @@ function showFeedback(ok,x,first,type){
   /* say 卡的字形／語意整個練習過程都顯示著，答錯回饋不需要重複秀一次 */
   const showReveal=!ok&&type!=='say';
   fb.innerHTML=`<div class="msg">${fluent?msg:(ok?'🎉 ':'💪 ')+msg}</div>
+    ${ok&&drill?`<div class="drillDone">⚡ 特訓完成！</div>`:''}
     ${showReveal?`<div class="bigword en" style="font-size:26px;margin:0 0 2px">${esc(x.w)}</div>
       <div class="gloss">${esc(x.zh||'')}</div>`:''}
     <button class="btn big ${ok?'green':''}" onclick="nextCard()">下一題 →</button>`;
@@ -1423,8 +1514,11 @@ function renderParent(){
 
     <div class="card mt">
       <h2>💌 媽媽的悄悄話</h2>
-      <p class="muted" style="margin-bottom:8px">寫幾句只有你想對他說的鼓勵話，會跟內建的加油語一起在首頁隨機出現——一行一句。存進去的話會跟著「匯出進度」一起備份走。</p>
-      <textarea id="mottoTxt" placeholder="例如：媽媽看到你今天很努力了！">${esc((db.mottos||[]).join('\n'))}</textarea>
+      <p class="muted" style="margin-bottom:8px">寫幾句只有你想對他說的鼓勵話——一行一句。開練前的會在他出發時鼓勵他，完成後的會在他做完時肯定他；不會每次都跳出來，讓他偶爾發現才有驚喜感。存進去的話會跟著「匯出進度」一起備份走。</p>
+      <p class="sublabel" style="margin-top:0">開練前的打氣</p>
+      <textarea id="mottoTxt" placeholder="例如：媽媽欣賞你主動挑戰的氣魄💪">${esc((db.mottos||[]).join('\n'))}</textarea>
+      <p class="sublabel">完成後的肯定</p>
+      <textarea id="mottoTxt2" placeholder="例如：又是自己完成的一天，最帥的就是這個！">${esc((db.mottosPost||[]).join('\n'))}</textarea>
       <button class="btn sm mt" onclick="saveMottos()">儲存悄悄話</button>
       <p class="muted mt" id="mottoMsg"></p>
     </div>
@@ -1481,10 +1575,13 @@ function ttsShow(){
   }catch(e){b.value='讀取失敗';}
 }
 function saveMottos(){
-  const raw=el('mottoTxt').value||'';
+  const raw=el('mottoTxt').value||'', raw2=el('mottoTxt2').value||'';
   db.mottos=raw.split('\n').map(s=>s.trim()).filter(Boolean);
+  db.mottosPost=raw2.split('\n').map(s=>s.trim()).filter(Boolean);
   save();
-  el('mottoMsg').textContent=db.mottos.length?('已存 '+db.mottos.length+' 句悄悄話，會混進首頁的加油語裡 💛'):'目前沒有自訂悄悄話，首頁會用內建的加油語。';
+  el('mottoMsg').textContent=(db.mottos.length||db.mottosPost.length)
+    ?('已存悄悄話：開練前 '+db.mottos.length+' 句・完成後 '+db.mottosPost.length+' 句 💛')
+    :'目前沒有自訂悄悄話，首頁會用內建的加油語。';
   sfx.ok();
 }
 function importWords(){

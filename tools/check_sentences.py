@@ -31,6 +31,11 @@ EXTRA_KNOWN = {
     "dad", "mom", "please",
 }
 
+# 刻意預習字：先以加壓字身分放進較早批次的例句曝露、之後才成為 SEED 目標字。
+# 孩子在該字正式進場前已聽讀過（設計紅利），故回溯掃描不視為順序違規。
+# eat/grow（7/16、7/21 例句）→ List 7 目標；watch/stop（7/21 例句）→ List 8–9 目標。
+PREVIEWED_BEFORE_ENTRY = {"eat", "grow", "watch", "stop"}
+
 # Fry 第 1 個 100 字（入 App 前已學，視為基底詞彙）
 FRY_1ST_100 = set("""the of and a to in is you that it he was for on are as with his they i
 at be this have from or one had by words but not what all were we when your can said there
@@ -115,6 +120,8 @@ def check(entries, base_vocab, seed2_order, v2_from_idx, draft_mode):
             if j is not None and j > idx:
                 if t in EXTRA_KNOWN:
                     notes.append(f"「{t}」晚進場（List {entries_list_num(seed2_order, j)}）但屬課外已知，可用")
+                elif t in PREVIEWED_BEFORE_ENTRY:
+                    notes.append(f"「{t}」為刻意預習字（先入舊例句曝露、後成目標字），可用")
                 else:
                     problems.append(f"引用尚未進場的字「{t}」（陣列序 {j} > {idx}）")
 
