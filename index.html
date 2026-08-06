@@ -227,6 +227,8 @@
        padding:5px 10px;font-weight:800;font-size:14px;}
   .badgePop{background:#FFF9E8;border:2px solid var(--gold);border-radius:var(--r);
             padding:8px;margin:6px 0;font-weight:800;font-size:15px;}
+  .mottoLine{font-size:15px;font-weight:700;font-style:italic;color:var(--gold-d);
+             margin-top:10px;line-height:1.5;}
   #cfx{position:fixed;inset:0;pointer-events:none;z-index:50;}
   .hid{display:none !important;}
   .mt{margin-top:14px;} .mtl{margin-top:22px;}
@@ -359,7 +361,7 @@
 <script>
 'use strict';
 /* ================= 資料 ================= */
-/* Fry's 2nd 100 — tier: master(熟用) / familiar(熟悉) / recognize(認識) */
+/* Fry's 2nd 100 — tier: master(複習軌) / familiar(練熟軌) / recognize(聽懂軌) */
 const SEED = [
  ['over','越過；在…上方','The bird flies over the house.',1],
  ['new','新的','I have a new book.',1],
@@ -463,7 +465,7 @@ const SEED = [
  ['world','世界','The world is big.',10]
 ].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'master',batch:'Fry 2nd 100 (List '+a[3]+')',known:1}));
 
-/* Fry's 3rd 100 — 熟悉軌；未標 known → 新字從 Lv0 蛋階段進場（List 1：7/15、List 2：7/16、List 3–6：7/21、List 7–10：8/6 匯入） */
+/* Fry's 3rd 100 — 練熟軌；未標 known → 新字從 Lv0 蛋階段進場（List 1：7/15、List 2：7/16、List 3–6：7/21、List 7–10：8/6 匯入） */
 const SEED2=[
  ['high','高的','The eagle flies high in the sky.',1],
  ['every','每個；每一','I feed my gecko every day.',1],
@@ -576,7 +578,8 @@ const INTERVALS=[0,1,2,4,8,16];               /* 各等級到下次複習的天�
 const MAXLV={master:5,familiar:5,recognize:4};
 const STAGE=['🥚','🐣','🐤','🐦','🦜','🦅'];
 const STAGE_NAME=['蛋','孵化','雛鳥','小鳥','成鳥','雄鷹'];
-const TIER_ZH={master:'熟用',familiar:'熟悉',recognize:'認識'};
+/* 軌名（2026-08-06 重命名，望文生義）：聽懂＝只練聽音辨義；練熟＝從蛋緩坡練到能拼能唸；複習＝已會的字直接維護。內部鍵不變。 */
+const TIER_ZH={master:'複習',familiar:'練熟',recognize:'聽懂'};
 const REVIEW_CAP=30, NEW_CAP=5, XP_HIT=10, XP_RETRY=5;
 const APP_VER='2026-07-17';   /* 除錯用版本標記，家長頁底部顯示 */
 /* 鷹芒勳章：連續 MEDAL_EVERY 天得 1 枚（上限 MEDAL_MAX），落練 1 天自動消耗 1 枚保住連續紀錄 */
@@ -593,7 +596,7 @@ const CHEERS=['今天也來練 10 分鐘吧！','你的小鳥們在等你！','�
 /* ================= 儲存 ================= */
 let db=load();
 db.mottosPost=db.mottosPost||[];   /* 完成後池；相容沒有此欄位的舊備份 */
-function fresh(){return {progress:{},custom:[],mottos:[],mottosPost:[],stats:{xp:0,streak:0,best:0,shields:0,lastDay:'',days:{},badges:[],spellLog:[]},sound:true};}
+function fresh(){return {progress:{},custom:[],mottos:[],mottosPost:[],stats:{xp:0,streak:0,best:0,shields:0,lastDay:'',days:{},badges:[],spellLog:[],chal:{}},sound:true};}
 function load(){
   try{
     const raw=localStorage.getItem(KEY)||localStorage.getItem(BAK);
@@ -622,8 +625,8 @@ function allWords(){
 function prog(w){
   const k=w.toLowerCase();
   if(!db.progress[k]){
-    const isKnown=SEED_ALL.some(s=>s.known&&s.w.toLowerCase()===k);
-    /* 已學過的批次（known:1）：從 Lv1 起步、今天到期；新匯入批次與自訂字：Lv0、蛋階段待介紹 */
+    const isKnown=SEED_ALL.concat(db.custom).some(s=>s.known&&s.w.toLowerCase()===k);
+    /* 已會的字（known:1，含手動匯入勾「已經會了」）：從 Lv1 起步、今天到期；其餘：Lv0、蛋階段待介紹 */
     db.progress[k]=isKnown?{lv:1,due:today(),intro:1,ok:0,ng:0}:{lv:0,due:today(),intro:0,ok:0,ng:0};
   }
   return db.progress[k];
@@ -802,6 +805,7 @@ function micChallengeReward(x){
   if(S.chalGiven.has(x.w))return;   /* 每字每場只加一次 */
   S.chalGiven.add(x.w);
   addXp(5); sfx.ok();
+  const t=today();db.stats.chal=db.stats.chal||{};db.stats.chal[t]=(db.stats.chal[t]||0)+1;
 }
 
 /* ================= 工具 ================= */
@@ -889,12 +893,16 @@ function renderHome(){
   const dueN=words.filter(x=>prog(x.w).intro&&prog(x.w).due<=t&&!isGrad(x)).length;
   const miss=missDays();
   let cheer;
-  if(doneToday)cheer='今天完成了！明天見 👋';
+  /* 悄悄話 v2：刻意不設 100% 機率，間歇性出現才不會壁紙化、才有機會被發現 */
+  if(doneToday)cheer=(db.mottosPost&&db.mottosPost.length&&Math.random()<0.5)
+    ?db.mottosPost[Math.floor(Math.random()*db.mottosPost.length)]
+    :'今天完成了！明天見 👋';
   else if(miss>0)cheer=db.stats.shields>=miss
     ?MEDAL+' '+MEDAL_NAME+'正替你守著連續紀錄，回來繼續吧！'
     :'小鷹們好想你！回來就是最棒的開始 💛';
-  else{const pool=(db.mottos&&db.mottos.length)?db.mottos.concat(CHEERS):CHEERS;
-    cheer=pool[Math.floor(Math.random()*pool.length)];}
+  else cheer=(db.mottos&&db.mottos.length&&Math.random()<0.5)
+    ?db.mottos[Math.floor(Math.random()*db.mottos.length)]
+    :CHEERS[Math.floor(Math.random()*CHEERS.length)];
   el('view').innerHTML=`
     <div class="mascot">
       <div class="bubble">${esc(cheer)}</div><br>
@@ -1086,7 +1094,7 @@ function tapTile(i){
     item.fluent=ok&&SP.undo===0&&ms<=1500+900*x.w.length;
     if(!db.stats.spellLog)db.stats.spellLog=[];
     db.stats.spellLog.push({w:x.w.toLowerCase(),ms,un:SP.undo,ok:ok?1:0,fl:item.fluent?1:0,d:today()});
-    if(db.stats.spellLog.length>300)db.stats.spellLog.splice(0,db.stats.spellLog.length-300);
+    if(db.stats.spellLog.length>1000)db.stats.spellLog.splice(0,db.stats.spellLog.length-1000);
     if(!ok)el('slots').style.animation='shake .3s';
     answer(ok);
   }
@@ -1272,6 +1280,9 @@ function finishSession(){
   const acc=S.firstOk+S.firstNg?S.firstOk/(S.firstOk+S.firstNg):1;
   const stars=acc>=0.9?3:acc>=0.7?2:1;
   checkBadges(acc);
+  /* 悄悄話 v2 結算頁版位：完成後池非空時 50% 機率插入，刻意不設 100% 防壁紙化 */
+  const mottoLine=(db.mottosPost&&db.mottosPost.length&&Math.random()<0.5)
+    ?db.mottosPost[Math.floor(Math.random()*db.mottosPost.length)]:'';
   save(); setHeader();
   el('view').innerHTML=`
     <div class="sumWrap">
@@ -1286,6 +1297,7 @@ function finishSession(){
       ${medalEarned?`<div class="badgePop">${MEDAL} 連續 ${db.stats.streak} 天！獲得一枚${MEDAL_NAME}（目前 ${db.stats.shields} 枚）</div>`:''}
       ${S.newBadges.map(b=>`<div class="badgePop">🏅 得到徽章：${esc(b)}</div>`).join('')}
       <p style="font-weight:800;font-size:16px;margin-top:8px">🔥 連續 ${db.stats.streak} 天！明天也要來喔！</p>
+      ${mottoLine?`<p class="mottoLine">💛 ${esc(mottoLine)}</p>`:''}
       <button class="btn big" style="margin-top:8px" onclick="S=null;go('avi')">去鳥園看看 🐦</button>
       <button class="btn ghost big" style="margin-top:8px" onclick="S=null;go('home')">回首頁 🏠</button>
     </div>`;
@@ -1491,11 +1503,14 @@ function renderParent(){
       <div class="prow"><span>${MEDAL} ${MEDAL_NAME}</span><b>${db.stats.shields} 枚</b></div>
       <div class="prow"><span>起飛（雄鷹）</span><b>${grad} / ${words.length} 字</b></div>
       <div class="prow"><span>今日待複習</span><b>${dueN} 字</b></div>
-      <div class="prow"><span>字庫組成</span><b>熟用 ${byTier.master}・熟悉 ${byTier.familiar}・認識 ${byTier.recognize}</b></div>
+      <div class="prow"><span>字庫組成</span><b>${TIER_ZH.master} ${byTier.master}・${TIER_ZH.familiar} ${byTier.familiar}・${TIER_ZH.recognize} ${byTier.recognize}</b></div>
       ${(()=>{const log=(db.stats.spellLog||[]).filter(e=>dayDiff(e.d,t)<=6);
         if(!log.length)return '';
         const f=log.filter(e=>e.fl).length, avg=Math.round(log.reduce((s,e)=>s+e.ms,0)/log.length/100)/10;
         return `<div class="prow"><span>拼字順暢度（近 7 天）</span><b>⚡ ${f}/${log.length} 秒殺・平均 ${avg} 秒</b></div>`;})()}
+      ${(()=>{const chal=db.stats.chal||{};let n=0;for(let i=6;i>=0;i--)n+=chal[addDays(t,-i)]||0;
+        if(!n)return '';
+        return `<div class="prow"><span>🎤 造句挑戰</span><b>近 7 天 ${n} 次</b></div>`;})()}
       <div class="days">${days.map(d=>`<div class="day ${d.n?'':'z'}">
         <i style="height:${Math.round(d.n/mx*46)+3}px" title="${d.ok}/${d.n}"></i><span>${d.d}</span></div>`).join('')}</div>
       <p class="muted" style="margin-top:6px">近 7 天每日作答題數（綠 = 有練習）</p>
@@ -1527,13 +1542,17 @@ function renderParent(){
       <h2>➕ 新增單字</h2>
       <p class="muted" style="margin-bottom:8px">貼上單字（逗號、空格、換行分隔皆可）。建議流程：把講義拍照傳給 Claude 並註明目標層級，由 Claude 轉錄、配中文與例句後更新 App；這裡的手動新增是備援（不含中文與例句）。</p>
       <textarea id="impTxt" placeholder="例如：high, every, near, add, food..."></textarea>
-      <div class="mt" style="display:flex;gap:10px;align-items:center">
-        <select id="impTier" style="flex:1">
-          <option value="familiar">目標：熟悉（溫和起步→產出）</option>
-          <option value="recognize">目標：認識（聽音辨識）</option>
-          <option value="master">目標：熟用（完整產出）</option>
-        </select>
-        <button class="btn sm" onclick="importWords()">匯入</button>
+      <div class="mt" style="display:flex;flex-direction:column;gap:8px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px">
+          <input type="checkbox" id="impKnown">這批字孩子已經會了（在校學過或生活中已使用）
+        </label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <select id="impDepth" style="flex:1">
+            <option value="produce">要練多深：練到能拼、能唸</option>
+            <option value="listen">要練多深：聽懂就好</option>
+          </select>
+          <button class="btn sm" onclick="importWords()">匯入</button>
+        </div>
       </div>
       <p class="muted mt" id="impMsg"></p>
     </div>
@@ -1586,14 +1605,19 @@ function saveMottos(){
 }
 function importWords(){
   const raw=el('impTxt').value||'';
-  const tier=el('impTier').value;
+  /* 兩問制（2026-08-06）：深度＋是否已會 → 自動判定軌別；已會＋練深＝複習軌（known:1 起步 Lv1） */
+  const known=el('impKnown').checked;
+  const tier=el('impDepth').value==='listen'?'recognize':(known?'master':'familiar');
   const found=raw.match(/[A-Za-z][A-Za-z']*/g)||[];
   const have={}; allWords().forEach(x=>have[x.w.toLowerCase()]=1);
   const added=[];
   found.forEach(w=>{const k=w.toLowerCase();
-    if(!have[k]){have[k]=1;db.custom.push({w:w===w.toUpperCase()?w:k==='america'?'America':k,zh:'',s:'',tier,batch:'手動新增 '+today()});added.push(k);}});
+    if(!have[k]){have[k]=1;
+      const item={w:w===w.toUpperCase()?w:k==='america'?'America':k,zh:'',s:'',tier,batch:'手動新增 '+today()};
+      if(known)item.known=1;
+      db.custom.push(item);added.push(k);}});
   save();
-  el('impMsg').textContent=added.length?('已新增 '+added.length+' 個字（'+TIER_ZH[tier]+'）：'+added.join(', ')):'沒有新的字（可能都已存在）。';
+  el('impMsg').textContent=added.length?('已新增 '+added.length+' 個字（'+TIER_ZH[tier]+'軌'+(known?'、已會起步':'')+'）：'+added.join(', ')):'沒有新的字（可能都已存在）。';
   if(added.length)sfx.ok();
 }
 function exportData(){
