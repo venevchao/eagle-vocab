@@ -581,7 +581,7 @@ const STAGE_NAME=['蛋','孵化','雛鳥','小鳥','成鳥','雄鷹'];
 /* 軌名（2026-08-06 重命名，望文生義）：聽懂＝只練聽音辨義；練熟＝從蛋緩坡練到能拼能唸；複習＝已會的字直接維護。內部鍵不變。 */
 const TIER_ZH={master:'複習',familiar:'練熟',recognize:'聽懂'};
 const REVIEW_CAP=30, NEW_CAP=5, XP_HIT=10, XP_RETRY=5;
-const APP_VER='2026-08-15c';   /* 除錯用版本標記，家長頁底部顯示 */
+const APP_VER='2026-08-16';   /* 除錯用版本標記，家長頁底部顯示 */
 /* 鷹芒勳章：連續 MEDAL_EVERY 天得 1 枚（上限 MEDAL_MAX），落練 1 天自動消耗 1 枚保住連續紀錄 */
 const MEDAL='🎖️', MEDAL_NAME='鷹芒勳章', MEDAL_EVERY=5, MEDAL_MAX=5;
 /* 馴鷹師等級：門檻依每日約 300–400 XP 設計，前快後慢，最高階約在暑假尾聲達成 */
@@ -1588,13 +1588,15 @@ function renderParent(){
 
     <div class="card mt">
       <h2>💾 進度備份</h2>
-      <p class="muted" style="margin-bottom:8px">進度存在此裝置的瀏覽器中。換裝置前請「匯出」，把文字貼到新裝置「匯入」。</p>
+      <p class="muted" style="margin-bottom:8px">進度存在此裝置的瀏覽器中。備份建議用「匯出成檔案＋從檔案匯入」；貼上匯入僅當備援（長文手動選取容易漏字）。</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn ghost sm" onclick="exportData()">匯出進度</button>
         <button class="btn ghost sm" onclick="exportFile()">📤 匯出成檔案</button>
-        <button class="btn ghost sm" onclick="importDataUI()">匯入進度</button>
+        <button class="btn ghost sm" onclick="importFileUI()">📥 從檔案匯入</button>
+        <button class="btn ghost sm" onclick="importDataUI()">貼上匯入</button>
         <button class="btn coral sm" onclick="resetAll()">全部重設</button>
       </div>
+      <input type="file" id="impFilePick" accept=".json,application/json,text/plain" class="hid" onchange="importFilePicked(this)">
       <textarea id="ioBox" class="mt hid" placeholder="匯出的進度文字會出現在這裡；匯入時把備份文字貼進來再按確認。"></textarea>
       <button class="btn sm mt hid" id="ioConfirm" onclick="importData()">確認匯入</button>
       <p class="muted mt" id="ioMsg"></p>
@@ -1656,7 +1658,9 @@ function exportData(){
 }
 function exportFile(){
   const name='eagle-vocab-'+today()+(TEST?'-test':'')+'.json';
-  const file=new File([JSON.stringify(db)],name,{type:'application/json'});
+  /* 加 UTF-8 BOM：iOS 檔案預覽對「幾乎全 ASCII、無 BOM」的檔案會猜錯編碼，中文（悄悄話）
+     在預覽/複製時變亂碼（8/15 匯入事故）。BOM 讓編碼偵測有明確依據；匯入端一律剝除 */
+  const file=new File(['\uFEFF'+JSON.stringify(db)],name,{type:'application/json'});
   if(navigator.canShare&&navigator.canShare({files:[file]})){
     /* 分享面板：使用者自選儲存到檔案／email／AirDrop；取消不算錯誤，靜默處理。
        不傳 title/text：iOS 會把它當第二個分享項目，「儲存到檔案」時多存一個「文字.txt」垃圾檔 */
@@ -1671,17 +1675,44 @@ function exportFile(){
   el('ioMsg').textContent='已下載備份檔 '+name+'。';
 }
 function importDataUI(){
+  IMP_TXT=null;
   const box=el('ioBox');box.classList.remove('hid');box.value='';
   el('ioConfirm').classList.remove('hid');
   el('ioMsg').textContent='貼上備份文字後按「確認匯入」。會覆蓋此裝置目前的進度。';
 }
+/* 從檔案匯入：FileReader 以 UTF-8 讀 bytes，繞過檔案預覽→手動選取→複製的通道
+   （該通道對長檔會漏字、對無 BOM 檔會猜錯編碼把中文毀成亂碼——8/15 悄悄話事故） */
+let IMP_TXT=null;
+function importFileUI(){el('impFilePick').click();}
+function importFilePicked(inp){
+  const f=inp.files&&inp.files[0]; inp.value='';   /* 清掉才能重選同一個檔案 */
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const txt=String(r.result).replace(/^\uFEFF/,'').trim();
+      const d=JSON.parse(txt);
+      if(!d||!d.progress||!d.stats)throw 0;
+      IMP_TXT=txt;
+      el('ioBox').classList.add('hid');
+      el('ioConfirm').classList.remove('hid');
+      el('ioMsg').textContent=`讀到「${f.name}」：最後練習日 ${d.stats.lastDay||'—'}・${Object.keys(d.progress).length} 字進度・悄悄話 ${(d.mottos||[]).length}＋${(d.mottosPost||[]).length} 句。按「確認匯入」會覆蓋此裝置目前的進度。`;
+    }catch(e){
+      IMP_TXT=null; el('ioConfirm').classList.add('hid');
+      el('ioMsg').textContent='讀取失敗：這不是完整的備份檔。';
+    }
+  };
+  r.onerror=()=>{IMP_TXT=null;el('ioMsg').textContent='檔案讀取失敗，請再試一次。';};
+  r.readAsText(f);
+}
 function importData(){
   try{
-    const d=JSON.parse(el('ioBox').value);
+    const d=JSON.parse(IMP_TXT||el('ioBox').value.replace(/^\uFEFF/,'').trim());
     if(!d||!d.progress||!d.stats)throw 0;
     db=Object.assign(fresh(),d);save();setHeader();
     el('ioMsg').textContent='匯入成功！';sfx.ok();
-  }catch(e){el('ioMsg').textContent='匯入失敗：格式不正確，請確認貼的是完整備份文字。';}
+  }catch(e){el('ioMsg').textContent='匯入失敗：格式不正確，請確認是完整的備份內容。';}
+  IMP_TXT=null;
 }
 function resetAll(){
   if(!confirm('確定要清除所有進度與新增的單字嗎？'))return;
