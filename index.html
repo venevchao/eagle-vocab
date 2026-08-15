@@ -581,7 +581,7 @@ const STAGE_NAME=['蛋','孵化','雛鳥','小鳥','成鳥','雄鷹'];
 /* 軌名（2026-08-06 重命名，望文生義）：聽懂＝只練聽音辨義；練熟＝從蛋緩坡練到能拼能唸；複習＝已會的字直接維護。內部鍵不變。 */
 const TIER_ZH={master:'複習',familiar:'練熟',recognize:'聽懂'};
 const REVIEW_CAP=30, NEW_CAP=5, XP_HIT=10, XP_RETRY=5;
-const APP_VER='2026-08-15b';   /* 除錯用版本標記，家長頁底部顯示 */
+const APP_VER='2026-08-15c';   /* 除錯用版本標記，家長頁底部顯示 */
 /* 鷹芒勳章：連續 MEDAL_EVERY 天得 1 枚（上限 MEDAL_MAX），落練 1 天自動消耗 1 枚保住連續紀錄 */
 const MEDAL='🎖️', MEDAL_NAME='鷹芒勳章', MEDAL_EVERY=5, MEDAL_MAX=5;
 /* 馴鷹師等級：門檻依每日約 300–400 XP 設計，前快後慢，最高階約在暑假尾聲達成 */
@@ -1658,8 +1658,9 @@ function exportFile(){
   const name='eagle-vocab-'+today()+(TEST?'-test':'')+'.json';
   const file=new File([JSON.stringify(db)],name,{type:'application/json'});
   if(navigator.canShare&&navigator.canShare({files:[file]})){
-    /* 分享面板：使用者自選儲存到檔案／email／AirDrop；取消不算錯誤，靜默處理 */
-    navigator.share({files:[file],title:'養鷹達人進度備份'}).catch(()=>{});
+    /* 分享面板：使用者自選儲存到檔案／email／AirDrop；取消不算錯誤，靜默處理。
+       不傳 title/text：iOS 會把它當第二個分享項目，「儲存到檔案」時多存一個「文字.txt」垃圾檔 */
+    navigator.share({files:[file]}).catch(()=>{});
     el('ioMsg').textContent='已產生備份檔，選擇要存到哪裡。';
     return;
   }
