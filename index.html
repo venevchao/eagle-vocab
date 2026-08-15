@@ -581,7 +581,7 @@ const STAGE_NAME=['蛋','孵化','雛鳥','小鳥','成鳥','雄鷹'];
 /* 軌名（2026-08-06 重命名，望文生義）：聽懂＝只練聽音辨義；練熟＝從蛋緩坡練到能拼能唸；複習＝已會的字直接維護。內部鍵不變。 */
 const TIER_ZH={master:'複習',familiar:'練熟',recognize:'聽懂'};
 const REVIEW_CAP=30, NEW_CAP=5, XP_HIT=10, XP_RETRY=5;
-const APP_VER='2026-08-06';   /* 除錯用版本標記，家長頁底部顯示 */
+const APP_VER='2026-08-15';   /* 除錯用版本標記，家長頁底部顯示 */
 /* 鷹芒勳章：連續 MEDAL_EVERY 天得 1 枚（上限 MEDAL_MAX），落練 1 天自動消耗 1 枚保住連續紀錄 */
 const MEDAL='🎖️', MEDAL_NAME='鷹芒勳章', MEDAL_EVERY=5, MEDAL_MAX=5;
 /* 馴鷹師等級：門檻依每日約 300–400 XP 設計，前快後慢，最高階約在暑假尾聲達成 */
@@ -811,6 +811,8 @@ function micChallengeReward(x){
 /* ================= 工具 ================= */
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+/* 內插進 inline onclick 單引號字串前必經此關：撇號字（don't/it's）與其例句會打斷 JS 字串（8/14 卡關事故） */
+function jsq(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
 function el(id){return document.getElementById(id);}
 function reduceMotion(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
 
@@ -1013,8 +1015,8 @@ function introCard(x){
   return `<div class="prompt">🌟 新朋友！</div>
     <div class="bigword en">${esc(x.w)}</div>
     <div class="gloss">${esc(x.zh||'')}</div>
-    <button class="speak" onclick="speak('${esc(x.w)}');sfx.tap()">🔊</button>
-    ${x.s?`<button class="btn ghost sm" onclick="speak('${esc(x.s)}',0.95)">🔊 聽例句</button>
+    <button class="speak" onclick="speak('${esc(jsq(x.w))}');sfx.tap()">🔊</button>
+    ${x.s?`<button class="btn ghost sm" onclick="speak('${esc(jsq(x.s))}',0.95)">🔊 聽例句</button>
       <p class="ex mt">${esc(x.s)}</p>`:''}
     <div class="fb"><button class="btn green big" onclick="introDone()">記住了！✋</button></div>`;
 }
@@ -1029,7 +1031,7 @@ function chooseCard(x){
   pool.sort((a,b)=>(sim(b.w,x.w)-sim(a.w,x.w))||Math.random()-.5);
   const opts=shuffle([x.w].concat(pool.slice(0,3).map(o=>o.w)));
   return `<div class="prompt">👂 聽一聽，是哪個字？</div>
-    <button class="speak" onclick="speak('${esc(x.w)}');sfx.tap()">🔊</button>
+    <button class="speak" onclick="speak('${esc(jsq(x.w))}');sfx.tap()">🔊</button>
     <div class="opts">${opts.map(w=>`<button class="opt en" data-w="${esc(w)}" onclick="pickOpt(this)">${esc(w)}</button>`).join('')}</div>
     <div class="fb" id="fb"></div>`;
 }
@@ -1050,7 +1052,7 @@ function drillIntroCard(x){
     <div class="prompt">這隻鳥想學高難度飛行！</div>
     <div class="chunkRow">${chunks.map((c,i)=>`<span class="chunk ${i%2?'chunkB':'chunkG'}">${esc(c)}</span>`).join('<span class="chunkDot">·</span>')}</div>
     <div class="gloss">${esc(x.zh||'')}</div>
-    <button class="speak" onclick="speak('${esc(x.w)}');sfx.tap()">🔊</button>
+    <button class="speak" onclick="speak('${esc(jsq(x.w))}');sfx.tap()">🔊</button>
     <div class="fb"><button class="btn big" onclick="startDrill()">開始特訓 →</button></div>`;
 }
 function startDrill(){S.q[S.i].drillGo=1;sfx.tap();serializeSession();renderCard();}
@@ -1072,7 +1074,7 @@ function spellCard(x,drill){
   const ghost=drill?`<div class="chunkRow">${(CHUNK_MAP[x.w.toLowerCase()]||'').split('·')
     .map(c=>`<span class="chunk chunkGhost">${Array(c.length).fill('<i></i>').join('')}</span>`).join('')}</div>`:'';
   return `<div class="prompt">👂 聽一聽，拼出這個字！</div>
-    <button class="speak" onclick="speak('${esc(x.w)}');sfx.tap()">🔊</button>
+    <button class="speak" onclick="speak('${esc(jsq(x.w))}');sfx.tap()">🔊</button>
     ${ghost}
     <div class="gloss">${esc(x.zh||'')}</div>
     <div class="slots" id="slots" style="--slotw:${slotw}px;--slotf:${slotf}px;--slotgap:${slotgap}px">${letters.map(()=>'<div class="slot"></div>').join('')}</div>
@@ -1142,7 +1144,7 @@ function revealSay(){
     <div class="gloss">${esc(x.zh||'')}</div>
     ${hasRec?`<div class="echoRow">
         <button class="btn ghost sm" onclick="micPlay('w')">▶️ 我唸的字</button>
-        <button class="btn ghost sm" onclick="speak('${esc(x.w)}')">🔊 聽標準音</button>
+        <button class="btn ghost sm" onclick="speak('${esc(jsq(x.w))}')">🔊 聽標準音</button>
       </div>
       <p class="muted" style="margin:6px 0 0;text-align:center">心裡跟著唸一次，發音更好聽！</p>`:''}
     <div class="fb">
@@ -1160,7 +1162,7 @@ function sentenceBeat(ok,x){
     <div class="prompt" style="margin:14px 0 10px">🏁 最後一關：例句！</div>
     <p class="ex exBig">${esc(x.s)}</p>
     <div class="fb">
-      <button class="btn big" onclick="sentPlay('${esc(x.s)}')">🔊 聽例句</button>
+      <button class="btn big" onclick="sentPlay('${esc(jsq(x.s))}')">🔊 聽例句</button>
       <button class="btn green big mt ghostHid" id="sentNext" onclick="nextCard()">下一題 →</button>
     </div>`;
 }
@@ -1179,7 +1181,7 @@ function echoCard(x){
   return `<div class="prompt">🦅 這隻雄鷹要載句子飛了！</div>
     <div class="bigword en" style="font-size:30px">${esc(x.w)}</div>
     <p class="ex mt">${esc(x.s)}</p>
-    <button class="speak" onclick="speak('${esc(x.s)}',0.9)">🔊</button>
+    <button class="speak" onclick="speak('${esc(jsq(x.s))}',0.9)">🔊</button>
     ${micOn?`<div class="micRow" id="micEchoBox">${micWidgetHTML('e','🎙️ 跟著唸一次整句',null)}</div>`:''}
     <div class="fb" id="fb" style="padding-top:10px">
       <button class="btn green big" onclick="echoDone()">完成 ✓　+5⭐</button>
@@ -1349,7 +1351,7 @@ function renderAviary(){
   const order=[5,4,3,2,1,0].filter(i=>buckets[i].length&&(AVI_F==='all'||AVI_F===i));
   const secs=order.map(i=>`
     <div class="secHead"><span class="t">${STAGE[i]} ${STAGE_NAME[i]}</span><span class="c">${buckets[i].length} 隻・${STAGE_FLAVOR[i]}</span></div>
-    <div class="aviGrid">${buckets[i].map(x=>`<div class="aviCell ${isGrad(x)?'grad':''}" onclick="tapAvi('${esc(x.w)}')">
+    <div class="aviGrid">${buckets[i].map(x=>`<div class="aviCell ${isGrad(x)?'grad':''}" onclick="tapAvi('${esc(jsq(x.w))}')">
       ${canEvolve(x)?'<span class="zap">⚡</span>':''}<div class="em">${stageOf(x)}</div><div class="w en">${esc(x.w)}</div></div>`).join('')}</div>`).join('');
   el('view').innerHTML=`
     <h2>我的鳥園　<span class="muted" style="font-size:14px">${buckets[5].length}/${words.length} 隻雄鷹</span></h2>
@@ -1379,7 +1381,7 @@ function renderFreeFlight(w){
     <div class="card stage">
       <div class="prompt">${stageOf(x)} ${esc(x.w)} 要載句子飛了！</div>
       <p class="ex mt">${esc(x.s)}</p>
-      <button class="speak" onclick="speak('${esc(x.s)}',0.9)">🔊</button>
+      <button class="speak" onclick="speak('${esc(jsq(x.s))}',0.9)">🔊</button>
       ${micOn?`<div class="micRow" id="micFFBox">${micWidgetHTML('ff')}</div>`:''}
       <div class="fb" style="padding-top:10px">
         <p class="muted">想聽幾次、跟讀幾次都可以，不計分也不影響進度。</p>
@@ -1523,7 +1525,7 @@ function renderParent(){
       <p class="muted" style="margin-bottom:6px">由答錯、拼字失手、退格與速度合成的排行——最適合當親子閒聊、造句遊戲的字。點字可聽發音。</p>
       ${st.map(r=>{
         const ev=[r.ng?('答錯 '+r.ng):'',r.fail?('拼字失手 '+r.fail):'',r.un?('退格 '+r.un):'',r.avg>12?('平均 '+r.avg+' 秒'):''].filter(Boolean).join('・');
-        return `<div class="prow"><span class="en" style="font-weight:800;cursor:pointer" onclick="ac();speak('${esc(r.w)}')">${esc(r.w)} 🔊</span><span class="muted" style="text-align:right">${ev}</span></div>`;
+        return `<div class="prow"><span class="en" style="font-weight:800;cursor:pointer" onclick="ac();speak('${esc(jsq(r.w))}')">${esc(r.w)} 🔊</span><span class="muted" style="text-align:right">${ev}</span></div>`;
       }).join('')}
     </div>`;})()}
 
