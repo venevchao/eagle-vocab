@@ -32,6 +32,8 @@ EXTRA_KNOWN = {
     "box", "door", "tape", "toy", "cool", "sunday",
     "dad", "mom", "please",
     "cats", "apollo", "midnight", "japan",   # 2026-08-06：過世家貓名（Apollo/Midnight）、全家日本行——媽媽於 List 7–10 驗收時確認
+    "youtube", "cake", "wednesday", "shirt", "brother", "planes", "plane",
+    "whale", "shark", "anime", "darwin", "cat",   # 2026-09-10：SEED3（4th 100 List 1–4）驗收時確認；加壓字 hot/win/fold/hides/favorite 依定義不入
 }
 
 # 刻意預習字：先以加壓字身分放進較早批次的例句曝露、之後才成為 SEED 目標字。
