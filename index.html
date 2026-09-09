@@ -121,7 +121,7 @@
   .chunkRow .chunkDot{color:var(--ink2);font-weight:800;font-size:20px;align-self:center;}
   .chunkRow .chunkGhost{background:var(--chip);display:inline-flex;gap:4px;padding:9px 10px;}
   .chunkRow .chunkGhost i{width:12px;height:4px;border-radius:2px;background:var(--ink2);opacity:.5;display:inline-block;}
-  .drillDone{font-size:14px;font-weight:800;color:var(--gold-d);margin-bottom:4px;}
+  .drillDone,.gateHint{font-size:14px;font-weight:800;color:var(--gold-d);margin-bottom:4px;}
   .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .opt{font-family:inherit;background:var(--card);border:2px solid var(--line);border-bottom-width:4px;
        border-radius:16px;padding:18px 8px;font-size:26px;font-weight:800;color:var(--ink);
@@ -625,7 +625,13 @@ const STAGE_NAME=['蛋','孵化','雛鳥','小鳥','成鳥','雄鷹'];
 /* 軌名（2026-08-06 重命名，望文生義）：聽懂＝只練聽音辨義；練熟＝從蛋緩坡練到能拼能唸；複習＝已會的字直接維護。內部鍵不變。 */
 const TIER_ZH={master:'複習',familiar:'練熟',recognize:'聽懂'};
 const REVIEW_CAP=30, NEW_CAP=5, XP_HIT=10, XP_RETRY=5;
-const APP_VER='2026-09-10';   /* 除錯用版本標記，家長頁底部顯示 */
+/* 畢業拼字閘門：練熟／複習軌的最後一關（Lv MAXLV-1）強制出拼字卡，累積 SP_NEED 次「首答拼對」才放行畢業。
+   治的是「四張唸讀卡自評過關就成雄鷹」的縫隙（until/together 零拼對即畢業）。聽懂軌不受影響。 */
+const SP_NEED=2;
+/* 雄鷹回鍋加權：練熟軌雄鷹拼字首答對未達 B_SP 次者優先被抓回來出拼字卡。
+   B_SP=1＝只補零拼對的字（上線時約 10 字、5 個練習日輪完）；輪完一圈後看數據再議是否拉到 2。 */
+const B_SP=1;
+const APP_VER='2026-09-10b';   /* 除錯用版本標記，家長頁底部顯示 */
 /* 鷹芒勳章：連續 MEDAL_EVERY 天得 1 枚（上限 MEDAL_MAX），落練 1 天自動消耗 1 枚保住連續紀錄 */
 const MEDAL='🎖️', MEDAL_NAME='鷹芒勳章', MEDAL_EVERY=5, MEDAL_MAX=5;
 /* 馴鷹師等級：門檻依每日約 300–400 XP 設計，前快後慢，最高階約在暑假尾聲達成 */
@@ -659,6 +665,32 @@ function save(){
     localStorage.setItem(KEY,s); localStorage.setItem(BAK,s);
   }catch(e){}
 }
+/* 舊資料補新欄位：載入時與匯入備份後各跑一次，對已完成的項目不重複動手 */
+function migrate(){
+  const mig=db.mig=db.mig||{};
+  /* ① sp（拼字首答對次數）一次性回填：舊 spellLog 分不出首答與重試，以「答對筆數」估算，
+        略為高估但只影響回填當下；此後由 answer() 精確累加（C 項的 f 旗標供未來重算） */
+  if(!mig.sp){
+    const cnt={};
+    (db.stats.spellLog||[]).forEach(e=>{if(e.ok===1)cnt[e.w]=(cnt[e.w]||0)+1;});
+    Object.keys(db.progress).forEach(k=>{const p=db.progress[k];if(p.sp==null)p.sp=cnt[k]||0;});
+    mig.sp=1;
+  }
+  /* ② tier 印記 t＋升軌自動降一級：只聽選練上來的聽懂軌字若被改到練熟／複習軌，
+        高等級卻從沒拼過會直接撞上拼字題，先退一級補一段緩坡（其他方向的改軌只更新印記） */
+  const tierOf={}; allWords().forEach(x=>tierOf[x.w.toLowerCase()]=x.tier);
+  Object.keys(db.progress).forEach(k=>{
+    const p=db.progress[k], cur=tierOf[k];
+    if(!cur)return;                                     /* 字已不在字庫：進度原封不動保留 */
+    if(p.t==null){p.t=cur;return;}                      /* 首次蓋印記，不動等級 */
+    if(p.t!==cur){
+      if(p.t==='recognize'&&cur!=='recognize'){p.lv=Math.max(0,p.lv-1);p.due=today();}
+      p.t=cur;
+    }
+  });
+  save();
+}
+migrate();
 
 /* ================= 詞庫 ================= */
 function allWords(){
@@ -669,9 +701,14 @@ function allWords(){
 function prog(w){
   const k=w.toLowerCase();
   if(!db.progress[k]){
-    const isKnown=SEED_ALL.concat(db.custom).some(s=>s.known&&s.w.toLowerCase()===k);
-    /* 已會的字（known:1，含手動匯入勾「已經會了」）：從 Lv1 起步、今天到期；其餘：Lv0、蛋階段待介紹 */
-    db.progress[k]=isKnown?{lv:1,due:today(),intro:1,ok:0,ng:0}:{lv:0,due:today(),intro:0,ok:0,ng:0};
+    const all=SEED_ALL.concat(db.custom);
+    const isKnown=all.some(s=>s.known&&s.w.toLowerCase()===k);
+    const src=all.find(s=>s.w.toLowerCase()===k);
+    /* 已會的字（known:1，含手動匯入勾「已經會了」）：從 Lv1 起步、今天到期；其餘：Lv0、蛋階段待介紹。
+       sp＝拼字首答對次數（畢業閘門用）、t＝進場時的軌別印記（升軌降級用） */
+    const base={sp:0,t:src?src.tier:'familiar'};
+    db.progress[k]=isKnown?Object.assign({lv:1,due:today(),intro:1,ok:0,ng:0},base)
+                          :Object.assign({lv:0,due:today(),intro:0,ok:0,ng:0},base);
   }
   return db.progress[k];
 }
@@ -867,7 +904,9 @@ different:'dif·fer·ent',sentence:'sen·tence',another:'an·oth·er',started:'s
 thought:'th·ought',through:'thr·ough',school:'sch·ool',between:'be·tween',
 every:'ev·er·y',earth:'ear·th',often:'of·ten',under:'un·der',
 important:'im·por·tant',together:'to·geth·er',something:'some·thing',children:'chil·dren',
-picture:'pic·ture',mother:'moth·er',father:'fa·ther',again:'a·gain',around:'a·round',follow:'fol·low'};
+picture:'pic·ture',mother:'moth·er',father:'fa·ther',again:'a·gain',around:'a·round',follow:'fol·low',
+enough:'e·nough',mountains:'moun·tains',family:'fam·i·ly',really:'real·ly',
+until:'un·til',always:'al·ways',walked:'walk·ed',idea:'i·de·a'};
 function isStubborn(w){
   if(prog(w).ng<2)return false;
   const k=w.toLowerCase(), t=today();
@@ -889,9 +928,21 @@ function buildQueue(){
     if(isStubborn(x.w)&&CHUNK_MAP[x.w.toLowerCase()]&&drillN<2){drillN++;return {x,type:'spell',tries:0,drill:1};}
     return {x,type:cardType(x),tries:0};
   });
-  /* 已畢業的字：抽 2 個回鍋——有例句且麥克風可用時升級成句子回音卡，否則退回一般快問快答 */
-  const grads=shuffle(words.filter(isGrad)).slice(0,2);
-  grads.forEach(x=>q.splice(Math.floor(Math.random()*(q.length+1)),0,{x,type:'echoCandidate',tries:0,bonus:1}));
+  /* 已畢業的字：每場抽 2 隻回鍋，優先序 ①練熟軌拼字首答對未達 B_SP 次（零拼對就畢業的漏網之魚）
+     ②近 30 天有拼字敗績的頑固字 ③其餘隨機。①②出拼字卡把字揪回來練，③維持句子回音卡。
+     複習軌雄鷹不入①：學校已學、7/14 前的拼字紀錄早已被擠出 spellLog，且是他最驕傲的 100 隻。 */
+  const gradAll=shuffle(words.filter(isGrad));
+  const failed30=w=>(db.stats.spellLog||[]).some(e=>e.w===w.toLowerCase()&&e.ok===0&&dayDiff(e.d,t)<=30);
+  const g1=gradAll.filter(x=>x.tier==='familiar'&&(prog(x.w).sp||0)<B_SP);
+  const g1set=new Set(g1.map(x=>x.w));
+  const g2=gradAll.filter(x=>!g1set.has(x.w)&&prog(x.w).ng>=2&&failed30(x.w));
+  const g2set=new Set(g2.map(x=>x.w));
+  const g3=gradAll.filter(x=>!g1set.has(x.w)&&!g2set.has(x.w));
+  g1.concat(g2,g3).slice(0,2).forEach(x=>{
+    const hard=g1set.has(x.w)||g2set.has(x.w);
+    q.splice(Math.floor(Math.random()*(q.length+1)),0,
+      {x,type:hard?'spell':'echoCandidate',tries:0,bonus:1});
+  });
   /* 新字：介紹卡 + 緊接一張辨識卡 */
   fresh_.forEach(x=>{
     const pos=Math.floor(Math.random()*(q.length+1));
@@ -903,6 +954,8 @@ function buildQueue(){
 function cardType(x){
   const p=prog(x.w), r=Math.random();
   if(x.tier==='recognize')return 'choose';
+  /* 畢業拼字閘門：最後一關（畢業前一級）拼字首答對還沒湊滿 SP_NEED 次，一律出拼字卡 */
+  if(p.lv===MAXLV[x.tier]-1&&(p.sp||0)<SP_NEED)return 'spell';
   if(x.tier==='familiar'&&p.lv<=2)return r<.6?'choose':'spell';
   /* master／高階 familiar：主攻產出 —— 聽音拼字、看字唸出 */
   return r<.5?'spell':'say';
@@ -984,7 +1037,8 @@ function serializeSession(){
       freeplay:S.freeplay?1:0,rank0:S.rank0,evolved:S.evolved,
       chal:S.chalGiven?[...S.chalGiven]:[],
       q:S.q.map(it=>({w:it.x.w,type:it.type==='echo'?'echoCandidate':it.type,
-        tries:it.tries||0,bonus:it.bonus?1:0,followup:it.followup?1:0}))
+        tries:it.tries||0,bonus:it.bonus?1:0,followup:it.followup?1:0,
+        drill:it.drill?1:0,drillGo:it.drillGo?1:0}))
     }));
   }catch(e){}
 }
@@ -1004,7 +1058,9 @@ function restoreSession(){
     const q=[];
     for(const it of d.q){
       const x=map[it.w.toLowerCase()]; if(!x)return null;
-      q.push({x,type:it.type,tries:it.tries,bonus:it.bonus?1:0,followup:it.followup});
+      /* drill／drillGo 一併還原，否則續練後特訓卡會退化成普通拼字卡（切塊骨架與 dr 遙測都會掉） */
+      q.push({x,type:it.type,tries:it.tries,bonus:it.bonus?1:0,followup:it.followup,
+        drill:it.drill?1:0,drillGo:it.drillGo?1:0});
     }
     return {q,i:d.i,total:q.length,firstOk:d.firstOk,firstNg:d.firstNg,xp:d.xp,
       evolved:d.evolved||[],newBadges:[],rank0:d.rank0,freeplay:!!d.freeplay,
@@ -1139,7 +1195,14 @@ function tapTile(i){
     const ms=Date.now()-SP.t0, item=S.q[S.i];
     item.fluent=ok&&SP.undo===0&&ms<=1500+900*x.w.length;
     if(!db.stats.spellLog)db.stats.spellLog=[];
-    db.stats.spellLog.push({w:x.w.toLowerCase(),ms,un:SP.undo,ok:ok?1:0,fl:item.fluent?1:0,d:today()});
+    /* 選用欄位（ms 語意不變，免版本標記）：f＝首答、dr＝鷹眼特訓卡、b＝雄鷹回鍋卡、a＝答錯時拼出來的字串
+       （重複快錯要看實際錯答才診斷得出字母序固化，見 girl／state 案例） */
+    const rec={w:x.w.toLowerCase(),ms,un:SP.undo,ok:ok?1:0,fl:item.fluent?1:0,d:today()};
+    if(item.tries===0)rec.f=1;
+    if(item.drill)rec.dr=1;
+    if(item.bonus)rec.b=1;
+    if(!ok)rec.a=got.toLowerCase();
+    db.stats.spellLog.push(rec);
     if(db.stats.spellLog.length>1000)db.stats.spellLog.splice(0,db.stats.spellLog.length-1000);
     if(!ok)el('slots').style.animation='shake .3s';
     answer(ok);
@@ -1248,15 +1311,26 @@ function echoDone(){
 function answer(ok){
   const item=S.q[S.i], x=item.x, p=prog(x.w);
   const first=item.tries===0;
+  p.t=x.tier;                                /* 軌別印記：改軌時比對用（見 migrate） */
   if(ok){
     (item.fluent&&first)?sfx.zap():sfx.ok(); p.ok++;
+    /* 拼字首答對才記一次 sp（重試不計；回鍋 bonus 卡計入——那正是要它練的） */
+    if(first&&item.type==='spell')p.sp=(p.sp||0)+1;
     if(first){
       S.firstOk++;
       let gain=item.bonus?XP_RETRY:XP_HIT;
       if(item.fluent&&!item.bonus)gain+=2;   /* ⚡ 秒殺獎勵 */
       addXp(gain);
       const before=isGrad(x)?'🦅':STAGE[Math.min(p.lv,5)];
-      if(!item.bonus){p.lv=Math.min(p.lv+1,MAXLV[x.tier]);p.due=addDays(today(),INTERVALS[Math.min(p.lv,INTERVALS.length-1)]);}
+      if(!item.bonus){
+        const cap=MAXLV[x.tier];
+        /* 畢業拼字閘門：要飛出去了但拼字首答對還沒滿 SP_NEED 次 → 停在最後一關，明天再考（不睡 8 天） */
+        if(p.lv+1>=cap&&x.tier!=='recognize'&&(p.sp||0)<SP_NEED){
+          p.lv=cap-1; p.due=addDays(today(),1); item.gated=1;
+        }else{
+          p.lv=Math.min(p.lv+1,cap); p.due=addDays(today(),INTERVALS[Math.min(p.lv,INTERVALS.length-1)]);
+        }
+      }
       const after=isGrad(x)?'🦅':STAGE[Math.min(p.lv,5)];
       if(before!==after){S.evolved.push({w:x.w,em:after});setTimeout(()=>sfx.up(),350);}
     }else{addXp(XP_RETRY);}
@@ -1286,8 +1360,11 @@ function showFeedback(ok,x,first,type,drill){
   fb.classList.add(ok?'ok':'ng');
   /* say 卡的字形／語意整個練習過程都顯示著，答錯回饋不需要重複秀一次 */
   const showReveal=!ok&&type!=='say';
+  /* 畢業閘門停級：只給正面提示，不解釋、不責備（差一步＝再拼對一次就起飛） */
+  const gated=ok&&S.q[S.i]&&S.q[S.i].gated;
   fb.innerHTML=`<div class="msg">${fluent?msg:(ok?'🎉 ':'💪 ')+msg}</div>
     ${ok&&drill?`<div class="drillDone">⚡ 特訓完成！</div>`:''}
+    ${gated?`<div class="gateHint">🪶 差一步就起飛！</div>`:''}
     ${showReveal?`<div class="bigword en" style="font-size:26px;margin:0 0 2px">${esc(x.w)}</div>
       <div class="gloss">${esc(x.zh||'')}</div>`:''}
     <button class="btn big ${ok?'green':''}" onclick="nextCard()">下一題 →</button>`;
@@ -1753,7 +1830,7 @@ function importData(){
   try{
     const d=JSON.parse(IMP_TXT||el('ioBox').value.replace(/^\uFEFF/,'').trim());
     if(!d||!d.progress||!d.stats)throw 0;
-    db=Object.assign(fresh(),d);save();setHeader();
+    db=Object.assign(fresh(),d);migrate();setHeader();   /* 匯入的舊備份同樣要補 sp／t 欄位 */
     el('ioMsg').textContent='匯入成功！';sfx.ok();
   }catch(e){el('ioMsg').textContent='匯入失敗：格式不正確，請確認是完整的備份內容。';}
   IMP_TXT=null;
