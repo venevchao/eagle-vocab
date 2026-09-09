@@ -569,7 +569,51 @@ const SEED2=[
  ['it\'s','它是（縮寫）','It\'s time to feed the gecko!',10]
 ].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'familiar',batch:'Fry 3rd 100 (List '+a[3]+')'}));
 
-const SEED_ALL=SEED.concat(SEED2);
+/* Fry's 4th 100 — 練熟軌（2026-09-09 裁決：不走原定聽懂軌，理由＝挑戰舒適區在全負荷）；未標 known → 新字從 Lv0 蛋階段進場（List 1–4：9/9 匯入） */
+const SEED3=[
+ ['body','身體','White cells keep my body safe.',1],
+ ['music','音樂','I play music while I fold paper.',1],
+ ['color','顏色','What color is your new gecko?',1],
+ ['stand','站；站立','Eagles stand on the high mountains.',1],
+ ['sun','太陽','We play football under the hot sun.',1],
+ ['questions','問題（發問）','I have many questions about life.',1],
+ ['fish','魚','I saw a whale shark, a big fish!',1],
+ ['area','區域','This area of the park is safe for bugs.',1],
+ ['mark','記號；做記號','I mark my name on my new toy.',1],
+ ['dog','狗','I really want a dog for a pet.',1],
+ ['horse','馬','A horse can run faster than a dog.',2],
+ ['birds','鳥（複數）','I watch my birds grow every night.',2],
+ ['problem','難題；問題','Math is never a problem for me.',2],
+ ['complete','完成；完整的','I complete my English work every night.',2],
+ ['room','房間','I like to watch YouTube in my room.',2],
+ ['knew','知道（過去式）','I knew my team would win the game.',2],
+ ['since','自從','My gecko has been happy since last night.',2],
+ ['ever','曾經','Have you ever played football in the rain?',2],
+ ['piece','一片；一塊','I want one more piece of cake.',2],
+ ['told','告訴（過去式）','Harper told me about her football team.',2],
+ ['usually','通常','I usually play football on Wednesday.',3],
+ ['didn\'t','沒有（過去否定）','I didn\'t stop until I got it right.',3],
+ ['friends','朋友（複數）','My friends and I play with paper planes.',3],
+ ['easy','容易的','Making paper guns is easy for me.',3],
+ ['heard','聽見（過去式）','I heard my favorite anime song again.',3],
+ ['order','順序；命令','Put the words in the right order.',3],
+ ['red','紅色的','I look cool in my red shirt.',3],
+ ['door','門','Don\'t let the gecko out the door.',3],
+ ['sure','確定的','Are you sure this bug is safe?',3],
+ ['become','變成；成為','My bird will become an eagle soon.',3],
+ ['top','頂端；上面','My name is on top of the list.',4],
+ ['ship','船','Darwin went on a ship to see new animals.',4],
+ ['across','橫越；穿過','We walked across the park to school.',4],
+ ['today','今天','I have football class today after school.',4],
+ ['during','在…期間','My gecko hides during the day.',4],
+ ['short','短的；矮的','My brother is short now, but he will grow.',4],
+ ['better','更好的','I am getting better at spelling long words.',4],
+ ['best','最好的','My gecko is the best pet ever!',4],
+ ['however','然而','I was very tired. However, I didn\'t stop.',4],
+ ['low','低的','The sun is low in the sky now.',4]
+].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'familiar',batch:'Fry 4th 100 (List '+a[3]+')'}));
+
+const SEED_ALL=SEED.concat(SEED2,SEED3);
 
 /* 測試模式：網址加 ?test 即啟用，資料存到完全獨立的 key，與正式紀錄互不干擾 */
 const TEST=new URLSearchParams(location.search).has('test');
@@ -581,7 +625,7 @@ const STAGE_NAME=['蛋','孵化','雛鳥','小鳥','成鳥','雄鷹'];
 /* 軌名（2026-08-06 重命名，望文生義）：聽懂＝只練聽音辨義；練熟＝從蛋緩坡練到能拼能唸；複習＝已會的字直接維護。內部鍵不變。 */
 const TIER_ZH={master:'複習',familiar:'練熟',recognize:'聽懂'};
 const REVIEW_CAP=30, NEW_CAP=5, XP_HIT=10, XP_RETRY=5;
-const APP_VER='2026-08-16';   /* 除錯用版本標記，家長頁底部顯示 */
+const APP_VER='2026-09-10';   /* 除錯用版本標記，家長頁底部顯示 */
 /* 鷹芒勳章：連續 MEDAL_EVERY 天得 1 枚（上限 MEDAL_MAX），落練 1 天自動消耗 1 枚保住連續紀錄 */
 const MEDAL='🎖️', MEDAL_NAME='鷹芒勳章', MEDAL_EVERY=5, MEDAL_MAX=5;
 /* 馴鷹師等級：門檻依每日約 300–400 XP 設計，前快後慢，最高階約在暑假尾聲達成 */

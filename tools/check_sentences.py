@@ -6,8 +6,10 @@
   python3 tools/check_sentences.py                # 全庫回歸掃描（讀 index.html）
   python3 tools/check_sentences.py --draft 檔案   # 待匯入草稿預檢
 
-草稿檔行格式與 SEED2 條目相同（可含結尾逗號與註解行）：
+草稿檔行格式與 SEED2／SEED3 條目相同（可含結尾逗號與註解行）：
   ['word','中文','Example sentence.',7],
+
+進場順序＝SEED（Fry 2nd 100）→ SEED2（3rd 100）→ SEED3（4th 100）→ 草稿。
 
 機械層規則（FAIL 會使 exit code = 1）：
   1. 目標字必須出現在例句中（7/21 thought 句教訓）
@@ -35,7 +37,11 @@ EXTRA_KNOWN = {
 # 刻意預習字：先以加壓字身分放進較早批次的例句曝露、之後才成為 SEED 目標字。
 # 孩子在該字正式進場前已聽讀過（設計紅利），故回溯掃描不視為順序違規。
 # eat/grow（7/16、7/21 例句）→ List 7 目標；watch/stop（7/21 例句）→ List 8–9 目標。
-PREVIEWED_BEFORE_ENTRY = {"eat", "grow", "watch", "stop"}
+# 2026-09-09 SEED3 匯入補入：下列 9 字早已散見於 SEED／SEED2 例句，成為 4th 100 目標字。
+PREVIEWED_BEFORE_ENTRY = {
+    "eat", "grow", "watch", "stop",
+    "birds", "dog", "door", "fish", "red", "short", "stand", "sun", "today",
+}
 
 # Fry 第 1 個 100 字（入 App 前已學，視為基底詞彙）
 FRY_1ST_100 = set("""the of and a to in is you that it he was for on are as with his they i
@@ -96,10 +102,10 @@ def known_lookup(word, vocab):
     return any(b in vocab for b in stem_candidates(word))
 
 
-def check(entries, base_vocab, seed2_order, v2_from_idx, draft_mode):
-    """entries: [(word, sentence, list_num, global_idx)]；回傳 (fails, reports)"""
+def check(entries, base_vocab, seed_order, v2_from_idx, draft_mode):
+    """entries: [(word, sentence, batch_label, list_num, global_idx)]；回傳 (fails, reports)"""
     fails, reports = 0, []
-    for word, sentence, lst, idx in entries:
+    for word, sentence, batch, lst, idx in entries:
         w = word.lower()
         toks = tokens(sentence)
         problems, notes = [], []
@@ -113,14 +119,14 @@ def check(entries, base_vocab, seed2_order, v2_from_idx, draft_mode):
             if not 5 <= len(toks) <= 9:
                 problems.append(f"句長 {len(toks)} 字（規範 5–9）")
 
-        # 規則 3：進場順序（只約束 SEED2 / 草稿的字）
+        # 規則 3：進場順序（只約束 SEED2 / SEED3 / 草稿的字）
         for t in set(toks):
             if t == w:
                 continue
-            j = seed2_order.get(t)
+            j = seed_order.get(t)
             if j is not None and j > idx:
                 if t in EXTRA_KNOWN:
-                    notes.append(f"「{t}」晚進場（List {entries_list_num(seed2_order, j)}）但屬課外已知，可用")
+                    notes.append(f"「{t}」晚進場（List {entries_list_num(seed_order, j)}）但屬課外已知，可用")
                 elif t in PREVIEWED_BEFORE_ENTRY:
                     notes.append(f"「{t}」為刻意預習字（先入舊例句曝露、後成目標字），可用")
                 else:
@@ -128,11 +134,11 @@ def check(entries, base_vocab, seed2_order, v2_from_idx, draft_mode):
 
         # 草稿模式：表外字清點＋撇號提醒
         if draft_mode:
-            entered = {t2 for t2, j2 in seed2_order.items()
+            entered = {t2 for t2, j2 in seed_order.items()
                        if isinstance(j2, int) and j2 <= idx}
             vocab_now = base_vocab | entered
             unknown = [t for t in toks
-                       if t != w and seed2_order.get(t) is None
+                       if t != w and seed_order.get(t) is None
                        and not known_lookup(t, vocab_now)
                        and t not in EXTRA_KNOWN]
             if unknown:
@@ -142,9 +148,9 @@ def check(entries, base_vocab, seed2_order, v2_from_idx, draft_mode):
 
         if problems:
             fails += 1
-            reports.append(f"❌ List {lst}〈{word}〉“{sentence}”\n     " + "；".join(problems))
+            reports.append(f"❌ {batch} List {lst}〈{word}〉“{sentence}”\n     " + "；".join(problems))
         elif notes:
-            reports.append(f"⚠️ List {lst}〈{word}〉“{sentence}”\n     " + "；".join(notes))
+            reports.append(f"⚠️ {batch} List {lst}〈{word}〉“{sentence}”\n     " + "；".join(notes))
     return fails, reports
 
 
@@ -160,11 +166,14 @@ def main():
     src = INDEX.read_text(encoding="utf-8")
     seed1 = parse_array(src, "SEED")
     seed2 = parse_array(src, "SEED2")
+    seed3 = parse_array(src, "SEED3")
 
+    # 受順序約束的字＝SEED2 → SEED3 →（草稿）串成一條進場序；SEED（已學）只當基底詞彙
+    ordered = [("3rd 100", e) for e in seed2] + [("4th 100", e) for e in seed3]
     base_vocab = FRY_1ST_100 | {w.lower() for w, _, _ in seed1}
-    seed2_order = {w.lower(): i for i, (w, _, _) in enumerate(seed2)}
-    seed2_order["__listnum__"] = {i: n for i, (_, _, n) in enumerate(seed2)}
-    v2_from_idx = next((i for i, (_, _, n) in enumerate(seed2) if n >= 3), len(seed2))
+    seed_order = {e[0].lower(): i for i, (_, e) in enumerate(ordered)}
+    seed_order["__listnum__"] = {i: e[2] for i, (_, e) in enumerate(ordered)}
+    v2_from_idx = next((i for i, (_, e) in enumerate(ordered) if e[2] >= 3), len(ordered))
 
     if args.draft:
         raw = pathlib.Path(args.draft).read_text(encoding="utf-8")
@@ -176,18 +185,20 @@ def main():
         if entry_like != len(draft):
             sys.exit(f"❌ 草稿有 {entry_like} 行條目但只解析出 {len(draft)} 句——"
                      f"有壞行被跳過（檢查撇號是否寫成 \\'、引號是否配對），修正後重跑")
-        # 草稿字接在 SEED2 之後進場；草稿內部也依行序
-        offset = len(seed2)
+        # 草稿字接在 SEED3 之後進場；草稿內部也依行序
+        offset = len(ordered)
         for i, (w, _, n) in enumerate(draft):
-            seed2_order[w.lower()] = offset + i
-            seed2_order["__listnum__"][offset + i] = n
-        entries = [(w, s, n, offset + i) for i, (w, s, n) in enumerate(draft)]
-        fails, reports = check(entries, base_vocab, seed2_order, v2_from_idx, draft_mode=True)
-        print(f"📋 草稿預檢：{len(draft)} 句（接續全庫 {len(seed1)+len(seed2)} 字之後進場）\n")
+            seed_order[w.lower()] = offset + i
+            seed_order["__listnum__"][offset + i] = n
+        entries = [(w, s, "草稿", n, offset + i) for i, (w, s, n) in enumerate(draft)]
+        fails, reports = check(entries, base_vocab, seed_order, v2_from_idx, draft_mode=True)
+        print(f"📋 草稿預檢：{len(draft)} 句"
+              f"（接續全庫 {len(seed1)+len(ordered)} 字之後進場）\n")
     else:
-        entries = [(w, s, n, i) for i, (w, s, n) in enumerate(seed2)]
-        fails, reports = check(entries, base_vocab, seed2_order, v2_from_idx, draft_mode=False)
-        print(f"🔍 全庫回歸掃描：SEED {len(seed1)} 字（豁免 v2 句長）＋ SEED2 {len(seed2)} 字\n")
+        entries = [(e[0], e[1], b, e[2], i) for i, (b, e) in enumerate(ordered)]
+        fails, reports = check(entries, base_vocab, seed_order, v2_from_idx, draft_mode=False)
+        print(f"🔍 全庫回歸掃描：SEED {len(seed1)} 字（豁免 v2 句長）"
+              f"＋ SEED2 {len(seed2)} 字 ＋ SEED3 {len(seed3)} 字\n")
 
     for r in reports:
         print(r)
