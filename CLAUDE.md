@@ -11,6 +11,7 @@
 
 - 唯一改動檔 `index.html`（`manual-preview.html` 是祕笈設計原稿存檔，勿當作業區）。
 - 部署＝`git add/commit/push`（commit 訊息繁中），Pages 自動更新；生效驗證用 `curl | grep`。
+- localStorage 綁網域（venevchao.github.io）不綁 repo 名——repo 改名（英文定名時）不丟孩子進度，僅 Pages 網址變更需重加主畫面書籤。
 - 本機無 node：JS 語法檢查用 `osascript -l JavaScript` 包 `new Function(src)`（先 sed 抽出 script 區塊）。
 - 測試沙盒：網址加 `?test=1`（獨立 localStorage `word-birds-test-v1`＋紫色警示條）。功能驗證**走純點擊路徑**——用 JS 直跳狀態會產生假警報。
 - 麥克風等硬體行為只能 iPad 真機驗收；程式端一律 graceful fallback。
@@ -23,6 +24,9 @@
 - 勿加 `apple-mobile-web-app-capable`（iOS standalone 用獨立儲存，會讓既有進度「消失」）。
 - **絕不評分發音**；錄音永遠 optional，任何錄音步驟不得成為離場門。
 - 星星永不扣；答錯語氣不懲罰；按鈕用祈使句；介面全繁中台灣用語（禁陸語詞彙）。
+- 頑固字／特訓類文案**永不病理化**（禁「生病／受傷／笨」），一律「特訓／試煉」正面框架（零罪惡感原則延伸）。
+- 新功能不另設 XP 經濟；自發行為（自主加練、自由探索）不疊加外部獎勵（過度辯證效應）；驚喜類回饋（例句彩蛋、悄悄話）低頻、不預告、不設 100% 出現率（稀疏原則，防壁紙化）。
+- 回饋投資順位依實測動機層級：**鳥園進化 > 星號 > 稱號**——新功能與文案以鳥為主語，稱號層不再加碼。
 - 新增持久化資料一律 profile-ready（預留孩子維度，二寶將至）。
 - spellLog 計時語意變更必須加版本標記（7/13 教訓：新舊資料不可混用校準）。
 
