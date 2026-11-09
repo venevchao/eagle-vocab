@@ -34,6 +34,8 @@ EXTRA_KNOWN = {
     "cats", "apollo", "midnight", "japan",   # 2026-08-06：過世家貓名（Apollo/Midnight）、全家日本行——媽媽於 List 7–10 驗收時確認
     "youtube", "cake", "wednesday", "shirt", "brother", "planes", "plane",
     "whale", "shark", "anime", "darwin", "cat",   # 2026-09-10：SEED3（4th 100 List 1–4）驗收時確認；加壓字 hot/win/fold/hides/favorite 依定義不入
+    "taiwan", "yellow", "hiking", "beyblade", "rainbow", "cookie", "cookies",
+    "fullmetal", "alchemist", "beetle", "beetles", "rhinoceros",   # 2026-11-09：List 5–10 她改寫句所含（步道健行課、戰鬥陀螺、鋼之煉金術師、獨角仙）；加壓字 tall/beach/snow/ran/swims/buy/born 不入
 }
 
 # 刻意預習字：先以加壓字身分放進較早批次的例句曝露、之後才成為 SEED 目標字。
@@ -43,6 +45,7 @@ EXTRA_KNOWN = {
 PREVIEWED_BEFORE_ENTRY = {
     "eat", "grow", "watch", "stop",
     "birds", "dog", "door", "fish", "red", "short", "stand", "sun", "today",
+    "fast", "table", "sing",   # 2026-11-09 List 5–10 匯入補入：fast 散見 6 句、table 見 set 句、sing 以 sings 變化形出現
 }
 
 # Fry 第 1 個 100 字（入 App 前已學，視為基底詞彙）
@@ -59,6 +62,7 @@ CONTRACTIONS = {
     "let's": ["let", "us"], "we're": ["we", "are"], "he's": ["he", "is"],
     "she's": ["she", "is"], "you're": ["you", "are"], "won't": ["will", "not"],
     "didn't": ["did", "not"], "doesn't": ["does", "not"],
+    "i'll": ["i", "will"],   # 2026-11-09：Fry 4th 100 List 10 目標字身
 }
 
 ENTRY_RE = re.compile(

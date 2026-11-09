@@ -569,7 +569,7 @@ const SEED2=[
  ['it\'s','它是（縮寫）','It\'s time to feed the gecko!',10]
 ].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'familiar',batch:'Fry 3rd 100 (List '+a[3]+')'}));
 
-/* Fry's 4th 100 — 練熟軌（2026-09-09 裁決：不走原定聽懂軌，理由＝挑戰舒適區在全負荷）；未標 known → 新字從 Lv0 蛋階段進場（List 1–4：9/9 匯入） */
+/* Fry's 4th 100 — 練熟軌（2026-09-09 裁決：不走原定聽懂軌，理由＝挑戰舒適區在全負荷）；未標 known → 新字從 Lv0 蛋階段進場（List 1–4：9/9、List 5–10：11/9 匯入） */
 const SEED3=[
  ['body','身體','White cells keep my body safe.',1],
  ['music','音樂','I play music while I fold paper.',1],
@@ -610,7 +610,67 @@ const SEED3=[
  ['better','更好的','I am getting better at spelling long words.',4],
  ['best','最好的','My gecko is the best pet ever!',4],
  ['however','然而','I was very tired. However, I didn\'t stop.',4],
- ['low','低的','The sun is low in the sky now.',4]
+ ['low','低的','The sun is low in the sky now.',4],
+ ['hours','小時（複數）','Our football game was two hours long.',5],
+ ['black','黑色的','I want a black dog or a yellow cat.',5],
+ ['products','產品（複數）','Japan makes many cool products.',5],
+ ['happened','發生（過去式）','What happened to my paper plane?',5],
+ ['whole','整個的','I read the whole book in one night.',5],
+ ['measure','測量','We measure how tall the plants grow.',5],
+ ['remember','記得','I remember the whale shark in Japan.',5],
+ ['early','早的；提早','I get up early on hiking days.',5],
+ ['waves','波浪（複數）','We saw big waves at the beach.',5],
+ ['reached','到達（過去式）','The eagle reached the top of the mountains.',5],
+ ['listen','聽','I listen to anime music every night.',6],
+ ['wind','風','The wind took my paper plane away.',6],
+ ['rock','岩石；石頭','I found a cool rock at the park.',6],
+ ['space','太空；空間','There is no air in space.',6],
+ ['covered','覆蓋（過去式）','Snow covered the high mountains in Japan.',6],
+ ['fast','快的；快速地','A whale shark is big but not fast.',6],
+ ['several','幾個；數個','I made several paper guns today.',6],
+ ['hold','握住；拿著','Hold the ball with both hands.',6],
+ ['himself','他自己','My brother made a paper shark by himself.',6],
+ ['toward','朝向','The dog ran toward the football.',6],
+ ['five','五','Our team got five goals today!',7],
+ ['step','一步；步驟','Fold the paper step by step.',7],
+ ['morning','早上','The sun comes up in the morning.',7],
+ ['passed','傳遞；經過（過去式）','I passed the ball to my friends.',7],
+ ['vowel','母音','The vowel in cat is a.',7],
+ ['true','真的；真實的','Is it true that eagles see very far?',7],
+ ['hundred','一百','I have more than two hundred birds now.',7],
+ ['against','對抗；靠著','We played against a strong team today.',7],
+ ['pattern','模式；圖案','Life has a pattern, day after day.',7],
+ ['numeral','數字（符號）','Write the numeral for the number five.',7],
+ ['table','桌子','Put the cake on the table, please.',8],
+ ['north','北方','Japan is to the north of Taiwan.',8],
+ ['slowly','慢慢地','The whale shark swims slowly in the sea.',8],
+ ['money','錢','I need money to buy a new Beyblade.',8],
+ ['map','地圖','Find Japan on the world map.',8],
+ ['farm','農場','Dogs help people on the farm.',8],
+ ['pulled','拉（過去式）','I pulled the door open for my brother.',8],
+ ['draw','畫','I draw eagles and bugs in my book.',8],
+ ['voice','聲音（嗓音）','I know my mom by her voice.',8],
+ ['seen','看見（過去分詞）','Have you ever seen a great rainbow?',8],
+ ['cold','冷的','My gecko does not like cold days.',9],
+ ['cried','哭（過去式）','My little brother cried for the cookies.',9],
+ ['plan','計畫','My plan is to get a dog one day.',9],
+ ['notice','注意到','Did you notice the new bird in the park?',9],
+ ['south','南方','Many birds go south when it gets cold.',9],
+ ['sing','唱歌','I like to sing anime songs like Fullmetal Alchemist.',9],
+ ['war','戰爭','World War Two ended long ago.',9],
+ ['ground','地面','Young rhinoceros beetles live under the ground.',9],
+ ['fall','掉落；落下','Leaves fall from the trees in the wind.',9],
+ ['king','國王','The king of the sky is the eagle.',9],
+ ['town','城鎮','Darwin was born in a small town.',10],
+ ['I\'ll','我會（縮寫）','I\'ll feed my gecko after the game.',10],
+ ['unit','單位；單元','A cell is the unit of life.',10],
+ ['figure','想出（figure out）；數字','I can figure out this hard word.',10],
+ ['certain','確定的','I am certain my team will win.',10],
+ ['field','球場；田野','We play football on the big field.',10],
+ ['travel','旅行','I want to travel to Japan again.',10],
+ ['wood','木頭','This table is made of wood.',10],
+ ['fire','火','Do not play with fire at home.',10],
+ ['upon','在…之上','Once upon a time, there was a king.',10]
 ].map(a=>({w:a[0],zh:a[1],s:a[2],tier:'familiar',batch:'Fry 4th 100 (List '+a[3]+')'}));
 
 const SEED_ALL=SEED.concat(SEED2,SEED3);
@@ -631,7 +691,7 @@ const SP_NEED=2;
 /* 雄鷹回鍋加權：練熟軌雄鷹拼字首答對未達 B_SP 次者優先被抓回來出拼字卡。
    B_SP=1＝只補零拼對的字（上線時約 10 字、5 個練習日輪完）；輪完一圈後看數據再議是否拉到 2。 */
 const B_SP=1;
-const APP_VER='2026-09-10c';   /* 除錯用版本標記，家長頁底部顯示 */
+const APP_VER='2026-11-09';   /* 除錯用版本標記，家長頁底部顯示 */
 /* 鷹芒勳章：連續 MEDAL_EVERY 天得 1 枚（上限 MEDAL_MAX），落練 1 天自動消耗 1 枚保住連續紀錄 */
 const MEDAL='🎖️', MEDAL_NAME='鷹芒勳章', MEDAL_EVERY=5, MEDAL_MAX=5;
 /* 馴鷹師等級：門檻依每日約 300–400 XP 設計，前快後慢，最高階約在暑假尾聲達成 */
